@@ -9,7 +9,7 @@
     </select>
 
 
-    <insert id="insertAccountInfo" parameterType="com.arknights.bot.domain.entity.OperatorInfo">
+    <insert id="insertAccountInfo" parameterType="com.arknights.bot.domain.entity.AccountInfo">
         INSERT INTO account_info (
                                 token,
                                 qq

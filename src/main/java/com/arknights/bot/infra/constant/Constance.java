@@ -24,5 +24,7 @@ public interface Constance {
 
     String RED_ENVELOPE = "发红包";
 
+    String GACHA_LOGO = "gacha";
+
 
 }

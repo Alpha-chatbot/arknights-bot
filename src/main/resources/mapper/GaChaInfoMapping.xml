@@ -10,7 +10,7 @@
     </select>
 
 
-    <insert id="insertGaChaInfo" parameterType="com.arknights.bot.domain.entity.OperatorInfo">
+    <insert id="insertGaChaInfo" parameterType="com.arknights.bot.domain.entity.GaChaInfo">
         INSERT INTO gacha_info (ts,
                                 operators_name,
                                 pool,
@@ -28,7 +28,5 @@
                #{processId}) on DUPLICATE KEY UPDATE
             process_id = #{processId}
     </insert>
-
-
 
 </mapper>

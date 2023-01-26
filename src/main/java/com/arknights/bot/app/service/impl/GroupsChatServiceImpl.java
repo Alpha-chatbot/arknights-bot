@@ -33,6 +33,7 @@ import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.arknights.bot.domain.entity.ClassificationEnum.GaCha;
 import static com.arknights.bot.domain.entity.ClassificationEnum.TokenInsert;
 import static com.arknights.bot.infra.util.DesUtil.*;
 import static com.arknights.bot.infra.util.TextToImageUtil.replaceEnter;
@@ -117,6 +118,8 @@ public class GroupsChatServiceImpl implements GroupsChatService {
     public String queryKeyword(Long qq, Long groupId, String name, String text) {
 
         String result = null;
+        String resultType = "";
+        String attachContent = "";
         ClassificationEnum c = ClassificationUtil.GetClass(text);
 
         // token特殊操作
@@ -130,6 +133,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                         "0.获取token方法：##token获取教程\n" +
                         "1.token录入方法：##token录入{你的token}，例如 ##token录入a7JD8jDdi9spp\n" +
                         "2.寻访记录：##寻访记录\n";
+                resultType = Constance.TYPE_JUST_TEXT;
                 break;
             case TokenHelp:
                 // token获取教程
@@ -138,13 +142,13 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                     ClassPathResource resource = new ClassPathResource("pic/demo.jpg");
                     InputStream inputStream = resource.getInputStream();
                     BufferedImage image = ImageIO.read(inputStream);
-                    String base641 = replaceEnter(new BASE64Encoder().encode(TextToImageUtil.imageToBytes(image)));
-                    sendMsgUtil.CallOPQApiSendImg(groupId, "[ATUSER(" + qq + ")]" + name, SendMsgUtil.picBase64Buf, base641, 2);
-                    result = "";
+                    result = replaceEnter(new BASE64Encoder().encode(TextToImageUtil.imageToBytes(image)));
+                    resultType = Constance.TYPE_JUST_IMG;
                     break;
                 }catch (Exception e){
                     log.info("获取demo图片异常{}", e);
                     result =  "...获取教程异常，请稍后再试";
+                    resultType = Constance.TYPE_JUST_TEXT;
                 }
                 break;
             case TokenInsert:
@@ -156,52 +160,59 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 String encryptString = getEncryptString(text);
                 // token信息插入或更新
                 result = insertOrUpdateToken(encryptString, qq);
+                resultType = Constance.TYPE_JUST_TEXT;
                 break;
             case GaCha:
                 // 寻访记录获取
                 // 获取解密后的token
                 String token = getToken(qq);
                 if(StringUtils.isNotBlank(token)){
-                    // l8jK5JGHe8SN25PI91kgc7xb
                     String info = gaChaInfoService.gaChaQueryByPage(1, token, qq);
                     if(StringUtils.isEmpty(info)){
                         result = "当前token无法获取官网信息，请尝试录入新token";
                     } else {
-                        result = Constance.TYPE_JUST_IMG + info;
+                        result = info;
                     }
                 } else {
                     log.info("token查询为空，请通过 ##token获取教程 先获取token，然后通过 ##token录入 进行录入 ");
                     result = "token查询为空，请通过 ##token获取教程 先获取token，然后通过 ##token录入 进行录入 ";
                 }
+                resultType = Constance.TYPE_JUST_IMG;
+                attachContent = Constance.GACHA_LOGO;
+                break;
+            case RED_ENVELOPE:
+                result = "狗包速速发红包";
+                resultType = Constance.TYPE_JUST_TEXT;
                 break;
             default:
                 result = "暂无对应查询，开发中";
+                resultType = Constance.TYPE_JUST_TEXT;
         }
 
-        // todo 临时添加
-        if(text.contains(Constance.RED_ENVELOPE)){
-            result = "狗包速速发红包";
-        }
 
         //返回空字符串则不发送信息
-        if (StringUtils.isNotBlank(result)) {
+        if (StringUtils.isNotBlank(result) && StringUtils.isNotBlank(resultType)) {
+            String imageUrl = "";
 
             // 图像消息
-            if (result.startsWith(Constance.TYPE_JUST_IMG) && !result.contains(Constance.STATUS_ERROR)) {
-                // 取img后的内容
-                String imageUrl = getImageUrl(result);
+            if (Constance.TYPE_JUST_IMG.equals(resultType)) {
+                if(Constance.GACHA_LOGO.equals(attachContent)) {
+                    // 取img后的内容
+                    imageUrl = getImageUrl(result);
+                }
                 if (imageUrl != null) {
                     // 添加at输出但不附加文本信息
                     sendMsgUtil.CallOPQApiSendImg(groupId, "[ATUSER(" + qq + ")]" + "", SendMsgUtil.picBase64Buf, imageUrl, 2);
                 } else {
                     sendMsgUtil.CallOPQApiSendMsg(groupId, "图像生成失败", 2);
                 }
+            } else if(Constance.TYPE_JUST_TEXT.equals(resultType)){
+                // 纯文字消息
+                sendMsgUtil.CallOPQApiSendMsg(groupId, result, 2);
+            } else if (StringUtils.isNotBlank(attachContent)){
+                // 文字+图片消息,attachContent为文字等内容
             }
 
-            // 文字消息
-            if (!result.startsWith(Constance.TYPE_JUST_IMG)) {
-                sendMsgUtil.CallOPQApiSendMsg(groupId, result, 2);
-            }
         }
         return result;
     }
@@ -482,8 +493,6 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         // 当前卡池寻访数
         int poolGaChaCounts = 0;
 
-        // 当前寻访数量
-        int size = value.size();
         // 对最近100条寻访进行分组
         Map<Integer, List<GaChaInfo>> gaChaGroup = value.stream().collect(Collectors.groupingBy(GaChaInfo::getRarity));
         // 统计六星，五星数量以及按卡池分组
@@ -491,8 +500,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         List<GaChaInfo> seniorOperatorList = gaChaGroup.get(5);
         log.info("六星干员数量{}", topOperatorList);
         log.info("五星干员数量{}", seniorOperatorList);
-        Map<String, GaChaInfo> topGaChaInfoMap;
-        Map<String, GaChaInfo> seniorGaChaInfoMap;
+
         Map<String, List<GaChaInfo>> gaChaInfoPoolsMap;
         if (!CollectionUtils.isEmpty(topOperatorList)) {
             topOperatorCounts = topOperatorList.size();

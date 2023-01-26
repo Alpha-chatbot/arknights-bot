@@ -12,5 +12,6 @@ public enum ClassificationEnum {
     TokenInsert,
     TokenHelp,
     CaiDan,
+    RED_ENVELOPE,
     TALKING;
 }

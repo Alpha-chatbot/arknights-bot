@@ -32,6 +32,7 @@ public class ClassificationUtil {
 
         map.put("菜单", CaiDan);
         map.put("功能", CaiDan);
+        map.put("发红包", RED_ENVELOPE);
 
         return map.getOrDefault(s, TALKING);
     }
