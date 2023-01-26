@@ -28,4 +28,12 @@ public interface GroupsChatService {
      * @param text
      */
     void sendMessage(Long groupId, Long qq, String text);
+
+    /**
+     * 更新token信息
+     * @param token
+     * @param qq
+     * @return
+     */
+    public String insertOrUpdateToken(String token, Long qq);
 }
