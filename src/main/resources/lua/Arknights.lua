@@ -35,7 +35,7 @@ function ReceiveGroupMsg(CurrentQQ, data)
         groupId = data.FromGroupId
     }
     response, error_message =
-    http.post("" .. url .. "/groups/receive",
+    http.post("" .. url .. "/groups/general-message",
         {
             body = json.encode(body),
             headers =
@@ -47,6 +47,7 @@ function ReceiveGroupMsg(CurrentQQ, data)
     return 1
 end
 
+-- 入群事件，消息撤回事件
 function ReceiveEvents(CurrentQQ, data, extData)
     if data.MsgType == "ON_EVENT_GROUP_JOIN" then
         myData = {
@@ -77,7 +78,7 @@ function ReceiveEvents(CurrentQQ, data, extData)
 		eventData = json.encode(myData)
     }
     response, error_message =
-    http.post("" .. url .. "/groups/autoEvent",
+    http.post("" .. url .. "/groups/event-message",
         {
             body = json.encode(body),
             headers =

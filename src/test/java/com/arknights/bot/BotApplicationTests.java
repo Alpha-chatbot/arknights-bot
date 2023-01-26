@@ -7,6 +7,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @SpringBootTest
 public class BotApplicationTests {
@@ -56,6 +58,22 @@ public class BotApplicationTests {
         return time;
     }
 
+    @Test
+    public void testEnter(){
+        // 输出 阿瓦达啃大瓜
+        System.out.println("测试回车换行"+"\r"+"阿瓦达啃大瓜");
+        // 取消文本中的换行
+        System.out.println(replaceEnter("从前有一只黄皮耗子\n" +
+                "叫皮卡丘\r" +
+                "神奇的是从前有一只蒜头王八"));
+    }
+
+    public static String replaceEnter(String str) {
+        String reg = "[\n-\r]";
+        Pattern p = Pattern.compile(reg);
+        Matcher m = p.matcher(str);
+        return m.replaceAll("");
+    }
 
 
 

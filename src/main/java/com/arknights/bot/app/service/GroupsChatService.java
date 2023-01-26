@@ -10,16 +10,22 @@ import com.arknights.bot.domain.entity.GroupsEventInfo;
 public interface GroupsChatService {
 
     /**
-     * 群聊模式消息获取并转发处理
+     * 群聊模式普通消息获取并处理
      * @param groupsEventInfo
      */
-    String groupMessageHandler (GroupsEventInfo groupsEventInfo);
+    String generalMessageHandler (GroupsEventInfo groupsEventInfo);
 
     /**
      * 入群事件和撤回事件 相关回复
+     * @param groupsEventInfo
+     */
+    void eventMessageHandler(GroupsEventInfo groupsEventInfo);
+
+    /**
+     * 判断并回复消息
      * @param groupId
      * @param qq
      * @param text
      */
-    void autoEvent(Long groupId, Long qq, String text);
+    void sendMessage(Long groupId, Long qq, String text);
 }
