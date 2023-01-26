@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.arknights.bot.infra.mapper.ActivityMapper">
+    <resultMap id="BaseResultMap" type="com.arknights.bot.domain.entity.ActivityInfo">
+        <result column="type" property="type" jdbcType="INTEGER"/>
+        <result column="hour" property="hour" jdbcType="VARCHAR"/>
+        <result column="count" property="count" jdbcType="BIGINT"/>
+    </resultMap>
+
+
+    <select id="selectActivity" resultMap="BaseResultMap">
+        SELECT type, HOUR(time) as hour, count(*) as count from a_activity group by type, HOUR(time)
+    </select>
+
+    <delete id="clearActivity">
+        delete from a_activity where DAY(time) != DAY(CURRENT_TIME)
+    </delete>
+
+    <insert id="insertSendMsg">
+        insert into a_activity (type) values (1)
+    </insert>
+
+    <insert id="insertSendPic">
+        insert into a_activity (type) values (2)
+    </insert>
+
+    <insert id="insertMsg">
+        insert into a_activity(type) values (#{type})
+    </insert>
+
+    <select id="getUserCount" resultType="java.lang.Long">
+        select count(qq) from a_user_found
+    </select>
+
+    <select id="getGroupCount" resultType="java.lang.Long">
+        select count(group_id) from a_group_admin
+    </select>
+</mapper>

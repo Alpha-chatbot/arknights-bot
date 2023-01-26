@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.arknights.bot.infra.mapper.GroupChatMapper">
+    <select id="selectAccountInfo" resultType="com.arknights.bot.domain.entity.AccountInfo">
+        SELECT *
+        FROM account_info
+        WHERE qq = #{qq}
+            limit 1
+    </select>
+
+
+    <insert id="insertAccountInfo" parameterType="com.arknights.bot.domain.entity.OperatorInfo">
+        INSERT INTO account_info (
+                                token,
+                                qq
+        )
+        VALUES (
+                #{token},
+                #{qq}
+               ) on DUPLICATE KEY UPDATE
+            token = #{token}
+    </insert>
+
+
+
+</mapper>
