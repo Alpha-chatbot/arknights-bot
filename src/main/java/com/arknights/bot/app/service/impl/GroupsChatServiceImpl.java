@@ -120,6 +120,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         String result = null;
         String resultType = "";
         String attachContent = "";
+
         ClassificationEnum c = ClassificationUtil.GetClass(text);
 
         // token特殊操作
@@ -189,16 +190,19 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 resultType = Constance.TYPE_JUST_TEXT;
         }
 
+        log.info("当前附加内容{}", attachContent);
+        log.info("当前resultType:{}", resultType);
 
         //返回空字符串则不发送信息
         if (StringUtils.isNotBlank(result) && StringUtils.isNotBlank(resultType)) {
             String imageUrl = "";
-
+            log.info("打印result信息:{}", result);
             // 图像消息
             if (Constance.TYPE_JUST_IMG.equals(resultType)) {
                 if(Constance.GACHA_LOGO.equals(attachContent)) {
                     // 取img后的内容
                     imageUrl = getImageUrl(result);
+                    log.info("打印imageUrl:{}",imageUrl);
                 }
                 if (imageUrl != null) {
                     // 添加at输出但不附加文本信息
@@ -291,16 +295,23 @@ public class GroupsChatServiceImpl implements GroupsChatService {
      * @throws JSONException
      */
     public String jsonHandler(String text, Long groupId) throws JSONException {
-        //这样开头的消息是图片消息,或者艾特操作
+
         if (text.startsWith("{\"Content")) {
+            //这样开头的消息是图片消息,或者艾特操作
             JSONObject jsonObj = new JSONObject(text);
             //提取图片消息中的文字部分，取关键字
             String keyword = jsonObj.getString("Content").split(" ")[0];
             //在json结构前添加关键字信息， 使用波浪线分隔，可以将图片内容和文字内容统一进行处理。
             text = keyword + "\001" + text;
+        } else if (text.startsWith("{\"FileID")) {
+        // 文件类型
+        } else if (text.startsWith("{\"GroupPic")) {
+            //纯图片消息，只判断第一张
+            JSONObject jsonObj = new JSONObject(text).getJSONArray("GroupPic").getJSONObject(0);
+            String Url = jsonObj.getString("Url");
         } else {
-            // 非文本内容暂时用不到
-            text = "";
+            // 纯文字类型
+            return text;
         }
         return text;
     }
@@ -389,7 +400,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
 
 
     public String getImageUrl(String result){
-        Long processId = Long.valueOf(result.substring(3));
+        Long processId = Long.valueOf(result);
         log.info("processId批次号为:{}", processId);
         result = "";
         if (Objects.nonNull(processId)) {
@@ -401,7 +412,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 // 生成image转url
                 result =  CallOPQApiSendImgMsg(gaChaInfoList);
             } catch (Exception e){
-                return "";
+               e.printStackTrace();
             }
             return result;
         }

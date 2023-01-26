@@ -195,7 +195,7 @@ public class SendMsgUtil {
                 e.printStackTrace();
             }
         });
-        log.info("发送消息{}成功", s);
+        log.info("发送消息[==={} ===]成功", s);
     }
 
     /**
