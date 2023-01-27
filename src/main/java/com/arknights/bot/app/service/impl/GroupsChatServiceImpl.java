@@ -145,6 +145,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                     BufferedImage image = ImageIO.read(inputStream);
                     result = replaceEnter(new BASE64Encoder().encode(TextToImageUtil.imageToBytes(image)));
                     resultType = Constance.TYPE_JUST_IMG;
+                    attachContent = Constance.TOKEN_DEMO;
                     break;
                 }catch (Exception e){
                     log.info("获取demo图片异常{}", e);
@@ -202,9 +203,11 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 if(Constance.GACHA_LOGO.equals(attachContent)) {
                     // 取img后的内容
                     imageUrl = getImageUrl(result);
-                    log.info("打印imageUrl:{}",imageUrl);
+                } else if (Constance.TOKEN_DEMO.equals(attachContent)){
+                    imageUrl = result;
                 }
-                if (imageUrl != null) {
+                if (StringUtils.isNotBlank(imageUrl)) {
+                    log.info("获取imageUrl成功");
                     // 添加at输出但不附加文本信息
                     sendMsgUtil.CallOPQApiSendImg(groupId, "[ATUSER(" + qq + ")]" + "", SendMsgUtil.picBase64Buf, imageUrl, 2);
                 } else {

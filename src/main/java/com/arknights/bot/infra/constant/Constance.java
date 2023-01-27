@@ -22,6 +22,8 @@ public interface Constance {
 
     String TOKEN_INSERT = "token录入";
 
+    String TOKEN_DEMO = "token获取教程";
+
     String RED_ENVELOPE = "发红包";
 
     String GACHA_LOGO = "gacha";
