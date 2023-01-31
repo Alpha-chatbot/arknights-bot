@@ -87,19 +87,19 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            // 菜单格式消息内容标准:##开头
+            // 菜单格式消息内容标准:#开头
             if (text.startsWith(Constance.START_MARK)) {
                 //判断回复效率，以防和其他机器人互动死锁
                 if (getMsgLimit(currentAccount, groupId, name)) {
                     // 取 ##后的内容
-                    String messages = text.substring(2);
+                    String messages = text.substring(1);
                     log.info("message内容{}", messages);
                     // 调用菜单关键词匹配方法
                     return queryKeyword(currentAccount, groupId, name, messages);
                 }
             }
             // 艾特行为
-            if(text.startsWith(Constance.AT_LOGO)){
+            if(text.contains(Constance.AT_LOGO)){
                 // 自动回复表情包
                 autoEventForAt(groupId, currentAccount);
             }
@@ -130,10 +130,10 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         }
         switch (c) {
             case CaiDan:
-                result = "W测试版初号机1.0\n" +
-                        "0.获取token方法：##token获取教程\n" +
-                        "1.token录入方法：##token录入{你的token}，例如 ##token录入a7JD8jDdi9spp\n" +
-                        "2.寻访记录：##寻访记录\n";
+                result = "这里是W测试版初号机1.0\n" +
+                        "0.获取token方法：#token获取教程\n" +
+                        "1.token录入方法：#token录入{你的token}，例如 #token录入a7JD8jDdi9spp\n" +
+                        "2.寻访记录：#寻访记录\n";
                 resultType = Constance.TYPE_JUST_TEXT;
                 break;
             case TokenHelp:
@@ -155,7 +155,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 break;
             case TokenInsert:
                 if(StringUtils.isEmpty(text)){
-                    result = "token不能为空，输入格式为 ##token录入xxxxx，xxxxx为你的token";
+                    result = "token不能为空，输入格式为 #token录入xxxxx，xxxxx为你的token";
                     break;
                 }
                 // 对token加密
@@ -176,14 +176,14 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                         result = info;
                     }
                 } else {
-                    log.info("token查询为空，请通过 ##token获取教程 先获取token，然后通过 ##token录入 进行录入 ");
-                    result = "token查询为空，请通过 ##token获取教程 先获取token，然后通过 ##token录入 进行录入 ";
+                    log.info("token查询为空，请通过 #token获取教程 先获取token，然后通过 #token录入 进行录入 ");
+                    result = "token查询为空，请通过 #token获取教程 先获取token，然后通过 #token录入 进行录入 ";
                 }
                 resultType = Constance.TYPE_JUST_IMG;
                 attachContent = Constance.GACHA_LOGO;
                 break;
             case RED_ENVELOPE:
-                result = "狗包速速发红包";
+                result = "群主速速发红包";
                 resultType = Constance.TYPE_JUST_TEXT;
                 break;
             default:

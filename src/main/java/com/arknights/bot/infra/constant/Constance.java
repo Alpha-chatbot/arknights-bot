@@ -6,7 +6,7 @@ package com.arknights.bot.infra.constant;
  */
 public interface Constance {
 
-    String START_MARK = "##";
+    String START_MARK = "#";
 
     String AT_LOGO = "@W";
 
@@ -27,6 +27,21 @@ public interface Constance {
     String RED_ENVELOPE = "发红包";
 
     String GACHA_LOGO = "gacha";
+
+    /**
+     * 技能相关
+     */
+    String SKILL_NAME_CH = "技能名=";
+    String SKILL_TYPE_ONE = "技能类型1=";
+    String SKILL_TYPE_TWO = "技能类型2=";
+    String SKILL_DESC = "描述=";
+    String SKILL_INIT = "初始=";
+    String SKILL_CONSUME = "消耗=";
+    String SKILL_SPAN = "持续=";
+    String SKILL = "技能";
+    String SKILL_SPECIALI = "技能专精";
+    String REMARKS = "备注=";
+    String REMARKS_EXTRA = "※";
 
 
 }
