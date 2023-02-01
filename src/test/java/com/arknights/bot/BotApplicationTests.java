@@ -1,5 +1,6 @@
 package com.arknights.bot;
 
+import com.arknights.bot.domain.entity.OperatorBaseInfo;
 import com.arknights.bot.domain.entity.SkillLevelInfo;
 import com.arknights.bot.infra.constant.Constance;
 import lombok.Value;
@@ -27,8 +28,10 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -102,14 +105,14 @@ public class BotApplicationTests {
     }
 
 
-
     public String replaceCharacter(String str) {
 
         // 处理字符串中的无用字符
         // 匹配color格式 和6位数字字母
-        Pattern pattern1 = Pattern.compile("(color\\|#[0-9a-zA-Z]{6}\\|)");
-        //
-        Pattern pattern2 = Pattern.compile("(\\|ba.dying\\|)");
+        Pattern pattern1 = Pattern.compile("(\\{[\\+\\-\\*]\\|[0-9]{1,3}[%]*\\|\\{\\{color\\|#[0-9a-zA-Z]{6}\\|)");
+        Pattern pattern2 = Pattern.compile("(\\{\\{color\\|#[0-9a-zA-Z]{6}\\|)");
+        // 移除术语标识
+        Pattern pattern3 = Pattern.compile("(\\|ba.dying\\|)");
         Matcher matcher1 = pattern1.matcher(str);
         int count = 0;
         while (matcher1.find()) {
@@ -122,12 +125,16 @@ public class BotApplicationTests {
         while (matcher2.find()) {
             count++;
         }
-        result = matcher2.replaceAll(":");
-        // log.info("第二次替换后:{}", result);
+        result = matcher2.replaceAll("");
+        Matcher matcher3 = pattern3.matcher(result);
+        while (matcher3.find()) {
+            count++;
+        }
+        result = matcher3.replaceAll(":");
         String regex = "(\\{)|(\\}|(\\|))";
         result = result.replaceAll(regex, "");
         // log.info("第三次替换后:{}", result);
-        return  result;
+        return result;
     }
 
 
@@ -137,7 +144,7 @@ public class BotApplicationTests {
         // url编码：对于中文,模仿HTML源码中字符集设定进行转换,可能是 UTF-8 或GBK 等
         String name = "";
         try {
-            String sEncode = URLEncoder.encode("嵯峨", "UTF-8");
+            String sEncode = URLEncoder.encode("风笛", "UTF-8");
             System.out.println("encode后:" + sEncode);
             name = sEncode;
             String sDecode = URLDecoder.decode(sEncode, "UTF-8");
@@ -150,7 +157,7 @@ public class BotApplicationTests {
         // https://prts.wiki/index.php?title=%E5%B5%AF%E5%B3%A8&action=edit
         String url = "https://prts.wiki/index.php" + "?title=" + name + "&action=edit";
         // String url = "https://prts.wiki/index.php?" + "title=" + name + "action=edit";
-         String result = sendGet(url);
+        String result = sendGet(url);
         // <span id="技能"> 与  span id="后勤技能 之间 每个 <tbody> 对应一个技能
 
         result = useJsoup(result);
@@ -186,17 +193,17 @@ public class BotApplicationTests {
         // 开始位置
         if (matcherStart.find()) {
             log.info("match start right ");
-             start = matcherStart.start();
+            start = matcherStart.start();
             // 结束位置
             if (matcherEnd.find()) {
                 log.info("match end right ");
                 end = matcherEnd.start();
             }
             // 拆分最多三个部分，对应三个技能
-            if(ObjectUtils.isNotEmpty(start) && ObjectUtils.isNotEmpty(end)){
+            if (ObjectUtils.isNotEmpty(start) && ObjectUtils.isNotEmpty(end)) {
                 log.info("起始下标位置{}，结束下标位置{}", start, end);
                 result = result.substring(start + (matchS1.length()), end);
-                // 去除多余注释
+                // 去除多余字符
                 result = replaceCharacter(result);
                 log.info("初步截取技能部分字符串长度{}", result.length());
                 Matcher matcherSkillOne = skillOne.matcher(result);
@@ -210,110 +217,164 @@ public class BotApplicationTests {
                     firstIndex = matcherSkillOne.start();
                     log.info("匹配到一技能字段开始位置:{}", firstIndex);
                     // 抓取第二个技能
-                    if(matcherSkillTwo.find()){
+                    if (matcherSkillTwo.find()) {
                         secondIndex = matcherSkillTwo.start();
                         log.info("匹配到二技能字段开始位置{}", secondIndex);
                         firstSkillContent = result.substring(firstIndex + (matchSkillOne.length()), secondIndex);
                         // 抓取第三个技能
-                        if(matcherSkillThree.find()){
+                        if (matcherSkillThree.find()) {
                             thirdIndex = matcherSkillThree.start();
                             log.info("匹配到三技能字段开始位置{}", thirdIndex);
                             secondSkillContent = result.substring(secondIndex + (matchSkillTwo.length()), thirdIndex);
-                            thirdSkillContent = result.substring(thirdIndex + (matchSkillThree.length()), result.length()-1);
+                            thirdSkillContent = result.substring(thirdIndex + (matchSkillThree.length()), result.length() - 1);
                         } else {
-                            secondSkillContent = result.substring(secondIndex + (matchSkillTwo.length()), result.length()-1);
+                            secondSkillContent = result.substring(secondIndex + (matchSkillTwo.length()), result.length() - 1);
                         }
                     }
                 } else {
                     log.error("抓取技能失败");
                 }
 
-/*                log.info("技能一:\n" + firstSkillContent);
-                log.info("技能二:\n" + secondSkillContent);
-                log.info("技能三:\n" + thirdSkillContent);*/
 
                 String s1 = useJsoup(firstSkillContent);
                 String s2 = useJsoup(secondSkillContent);
                 String s3 = useJsoup(thirdSkillContent);
-                if(StringUtils.isNotBlank(s1)){
-                    insertSkillInfo(s1, 1);
+
+                log.info("开始字符串拆分与数据插入");
+                if (StringUtils.isNotBlank(s1)) {
+                    insertSkillInfo(s1, 1L);
                     log.info("技能一插入完成");
-                }else {
+                } else {
                     log.error("技能拆分异常，当前为空");
                 }
-                if(StringUtils.isNotBlank(s2)) {
-                    insertSkillInfo(s2, 2);
+                if (StringUtils.isNotBlank(s2)) {
+                    insertSkillInfo(s2, 2L);
                     log.info("技能二插入完成");
                 }
-                if(StringUtils.isNotBlank(s3)) {
-                    insertSkillInfo(s3, 3);
+                if (StringUtils.isNotBlank(s3)) {
+                    insertSkillInfo(s3, 3L);
                     log.info("技能三插入完成");
                 }
 
+
             }
         }
 
     }
 
-    public void insertSkillInfo(String result, int order){
+    public void insertSkillInfo(String result, Long order) {
         log.info("按连续空格拆分行");
-        String [] strArray = result.split("\\s+");
-                if(ObjectUtils.isEmpty(strArray) || strArray.length < 30){
-                    log.info("解析异常，技能资料不全");
-                    return;
-                }
-                String openLevel = strArray[0];
-                String skillName = strArray[2];
-                if(skillName.startsWith(Constance.SKILL_NAME_CH)){
-                    skillName = skillName.substring(Constance.SKILL_NAME_CH.length());
-                } else {
-                    log.info("解析异常，技能匹配错位");
-                    return;
+        String[] strArray = result.split("\\s+");
+        if (ObjectUtils.isEmpty(strArray) || strArray.length < 30) {
+            log.info("解析异常，技能资料不全");
+            return;
+        }
+        String openLevel = strArray[0];
+        String skillName = strArray[2];
+        if (skillName.startsWith(Constance.SKILL_NAME_CH)) {
+            skillName = skillName.substring(Constance.SKILL_NAME_CH.length());
+        } else {
+            log.info("解析异常，技能匹配错位,当前skillName为:{}", skillName);
+            return;
+        }
+        List<SkillLevelInfo> skillLevelInfoList = new ArrayList<>();
+        // 1 ~ 10对应技能1到7，专一到专三
+        for (int i = 1; i <= 10; i++) {
+            SkillLevelInfo skillLevelInfo = new SkillLevelInfo();
+            StringBuilder remarks = new StringBuilder();
+            for (String line : strArray) {
+                // 技能序号，比如技能一为1
+                skillLevelInfo.setOrder(order);
+                // 技能等级
+                skillLevelInfo.setLevel((long) i);
+                // 技能解锁等级
+                skillLevelInfo.setOpenLevel(openLevel);
+                // 技能名
+                skillLevelInfo.setSkillName(skillName);
+                // 技力类型和触发类型
+                if (line.startsWith(Constance.SKILL_TYPE_ONE)) {
+                    skillLevelInfo.setPowerType(line.substring(Constance.SKILL_TYPE_ONE.length()));
+                } else if (line.startsWith(Constance.SKILL_TYPE_TWO)) {
+                    skillLevelInfo.setTriggerType(line.substring(Constance.SKILL_TYPE_TWO.length()));
                 }
 
-                int i = 0;
-        for(String line: strArray){
-            System.out.println("=====");
-            SkillLevelInfo skillLevelInfo = new SkillLevelInfo();
-            // 技力类型和触发类型
-            if(line.startsWith(Constance.SKILL_TYPE_ONE)){
-                skillLevelInfo.setPowerType(line.substring(Constance.SKILL_TYPE_ONE.length()));
-            } else if(line.startsWith(Constance.SKILL_TYPE_TWO)){
-                skillLevelInfo.setTriggerType(line.substring(Constance.SKILL_TYPE_TWO.length()));
-            }
-            // 每个技能等级对应的描述，初始值，消耗，持续时间
-            if(i != 0) {
+                // 每个技能等级对应的描述，初始值，消耗，持续时间
                 String skillDesc = Constance.SKILL + i + Constance.SKILL_DESC;
                 String skillInit = Constance.SKILL + i + Constance.SKILL_INIT;
                 String skillConsume = Constance.SKILL + i + Constance.SKILL_CONSUME;
-                if (line.startsWith(skillDesc)) {
-                    skillLevelInfo.setDescription(line.substring(skillDesc.length()));
-                } else if(line.startsWith(skillInit)){
-                    skillLevelInfo.setInitialValue(Long.valueOf(line.substring(skillInit.length())));
-                } else if(line.startsWith(skillConsume)){
-                    skillLevelInfo.setConsumeValue(Long.valueOf(line.substring(skillConsume.length())));
+                String skillSpan = Constance.SKILL + i + Constance.SKILL_SPAN;
+                int j = 0;
+                if (i > 7) {
+                    j = i - 7;
                 }
+                String skillSpecialiDesc = Constance.SKILL_SPECIALI + j + Constance.SKILL_DESC;
+                String skillSpecialiInit = Constance.SKILL_SPECIALI + j + Constance.SKILL_INIT;
+                String skillSpecialiConsume = Constance.SKILL_SPECIALI + j + Constance.SKILL_CONSUME;
+                String skillSpecialiSpan = Constance.SKILL_SPECIALI + j + Constance.SKILL_SPAN;
+                if (i <= 7) {
+                    if (line.startsWith(skillDesc)) {
+                        skillLevelInfo.setDescription(line.substring(skillDesc.length()));
+                    } else if (line.startsWith(skillInit)) {
+                        if (line.length() != skillInit.length()) {
+                            skillLevelInfo.setInitialValue(Long.valueOf(line.substring(skillInit.length())));
+                        } else {
+                            skillLevelInfo.setInitialValue(0L);
+                        }
+                    } else if (line.startsWith(skillConsume)) {
+                        if (line.length() != skillConsume.length()) {
+                            skillLevelInfo.setConsumeValue(Long.valueOf(line.substring(skillConsume.length())));
+                        } else {
+                            skillLevelInfo.setConsumeValue(0L);
+                        }
+                    } else if (line.startsWith(skillSpan)) {
+                        if (line.length() != skillSpan.length()) {
+                            skillLevelInfo.setSpan(Long.valueOf(line.substring(skillSpan.length())));
+                        } else {
+                            skillLevelInfo.setSpan(0L);
+                        }
+                    }
+                } else {
+                    if (line.startsWith(skillSpecialiDesc)) {
+                        skillLevelInfo.setDescription(line.substring(skillSpecialiDesc.length()));
+                    } else if (line.startsWith(skillSpecialiInit)) {
+                        if (line.length() != skillSpecialiInit.length()) {
+                            skillLevelInfo.setInitialValue(Long.valueOf(line.substring(skillSpecialiInit.length())));
+                        } else {
+                            skillLevelInfo.setInitialValue(0L);
+                        }
+                    } else if (line.startsWith(skillSpecialiConsume)) {
+                        if (line.length() != skillSpecialiConsume.length()) {
+                            skillLevelInfo.setConsumeValue(Long.valueOf(line.substring(skillSpecialiConsume.length())));
+                        } else {
+                            skillLevelInfo.setConsumeValue(0L);
+                        }
+                    } else if (line.startsWith(skillSpecialiSpan)) {
+                        if (line.length() != skillSpecialiSpan.length()) {
+                            skillLevelInfo.setSpan(Long.valueOf(line.substring(skillSpecialiSpan.length())));
+                        } else {
+                            skillLevelInfo.setSpan(0L);
+                        }
+                    } else if (line.contains(Constance.REMARKS_EXTRA)) {
+                        int idx = line.indexOf(Constance.REMARKS_EXTRA);
+                        if (ObjectUtils.isNotEmpty(idx)) {
+                            remarks.append(line.substring(idx)).append("\t");
+                        }
+                    }
+                }
+                skillLevelInfoList.add(skillLevelInfo);
             }
-            String powerType = strArray[2].substring(0, 4);
-            String triggerType = strArray[3].substring(0, 4);
-            String level = strArray[4];
-            String desc = strArray[5];
-
-            String lv1 = strArray[9];
-            String description1 = "";
-            if(lv1.equals("1")){
-
-            }
-            System.out.println(line);
-            i++;
+            skillLevelInfo.setRemarks(remarks.toString());
+            System.out.println("=====");
+            log.info("打印实体内容:{}", skillLevelInfo);
         }
+
 
     }
 
 
-    public String useJsoup( String htmlContent){
+    public String useJsoup(String htmlContent) {
         String content = "";
-        if(StringUtils.isNotBlank(htmlContent)) {
+        if (StringUtils.isNotBlank(htmlContent)) {
             //1. clean方法
             // content = Jsoup.clean(htmlContent, Whitelist.none());
             // log.info("clean结果：" + content);
@@ -356,6 +417,70 @@ public class BotApplicationTests {
             HttpClientUtils.closeQuietly(httpClient);
         }
         return html;
+    }
+
+    @Test
+    public void saad() {
+        String name = "";
+        try {
+            String sEncode = URLEncoder.encode("干员一览", "UTF-8");
+            System.out.println("encode后:" + sEncode);
+            name = sEncode;
+            String sDecode = URLDecoder.decode(sEncode, "UTF-8");
+            System.out.println("decode后:" + sDecode);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        String url = "https://wiki.biligame.com/arknights/" + name;
+        String result = sendGet(url);
+
+        result = useJsoup(result);
+        log.info("result\n,{}", result);
+
+        // 奇怪的截取判定)
+        String matchS1 = "特种";
+        String matchS2 = "取自";
+        Pattern startP = Pattern.compile(matchS1);
+        Pattern endP = Pattern.compile(matchS2);
+
+
+        Matcher matcherStart = startP.matcher(result);
+        Matcher matcherEnd = endP.matcher(result);
+
+        int start = 0;
+        int end = 0;
+        int length = result.length();
+        log.info("总长度{}", length);
+        // 开始位置
+        if (matcherStart.find()) {
+            log.info("match start right ");
+            start = matcherStart.start();
+            // 结束位置
+            if (matcherEnd.find()) {
+                log.info("match end right ");
+                end = matcherEnd.start();
+            }
+            if (ObjectUtils.isNotEmpty(start) && ObjectUtils.isNotEmpty(end)) {
+                log.info("起始下标位置{}，结束下标位置{}", start, end);
+                result = result.substring(start + (matchS1.length()), end);
+                log.info("按连续空格拆分行");
+                String[] strArray = result.split("\\s+");
+                List<OperatorBaseInfo> operatorBaseInfoList = new ArrayList<>();
+                for (String line : strArray) {
+                    if(StringUtils.equals(line, "异") || StringUtils.equals(line, "活") || StringUtils.equals(line, "限") || StringUtils.equals(line, "升")){
+                        continue;
+                    }
+                    Calendar now = Calendar.getInstance();
+                    Long processId = now.getTime().getTime();
+                    OperatorBaseInfo operatorBaseInfo = OperatorBaseInfo.builder().operatorId(processId).name(line).build();
+                    operatorBaseInfoList.add(operatorBaseInfo);
+                    System.out.println(line);
+                }
+                log.info("插入干员完成，当前list长度{}", operatorBaseInfoList.size());
+            }
+        }
+
     }
 
 

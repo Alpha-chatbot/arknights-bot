@@ -7,7 +7,7 @@ package com.arknights.bot.infra.constant;
 public interface Constance {
 
     String START_MARK = "#";
-
+    String PRE_CHAR = "=";
     String AT_LOGO = "@W";
 
     int PAGE_SIZE = 10;
@@ -43,5 +43,10 @@ public interface Constance {
     String REMARKS = "备注=";
     String REMARKS_EXTRA = "※";
 
+    /**
+     * 干员信息抓取相关
+     */
+    String OPERATOR_START_LOCAL = "特种";
+    String OPERATOR_END_LOCAL = "取自";
 
 }

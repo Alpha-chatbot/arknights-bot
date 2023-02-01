@@ -35,4 +35,6 @@ public class SkillLevelInfo {
     private Long order;
     @ApiModelProperty(value = "技能解锁条件")
     private String openLevel;
+    @ApiModelProperty(value = "附加字段1")
+    private String attribute1;
 }
