@@ -11,6 +11,8 @@ public interface Constance {
     String AT_LOGO = "@W";
 
     int PAGE_SIZE = 10;
+    int STR_LENGTH = 30;
+    int SKILL_COUNTS = 10;
 
     String TYPE_JUST_TEXT = "text";
 

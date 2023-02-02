@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.arknights.bot.infra.mapper.ImportGameDataMapper">
+    <select id="selectOperatorInfo" resultType="com.arknights.bot.domain.entity.OperatorBaseInfo">
+        SELECT *
+        FROM operator_base_info obi
+        where
+        1=1
+        <if test="name !=null">
+            and obi.name = #{name}
+        </if>
+    </select>
+
+
+    <insert id="insertOperatorBaseInfo" parameterType="com.arknights.bot.domain.entity.OperatorBaseInfo">
+        INSERT INTO operator_base_info (operator_id,
+                                name
+        )
+        VALUES (#{operatorId},
+                #{name}) on DUPLICATE KEY UPDATE
+            operator_id = #{operatorId}
+    </insert>
+
+    <insert id="insertSkillInfo" parameterType="com.arknights.bot.domain.entity.SkillLevelInfo">
+        INSERT INTO skill_info si (	si.id,
+	si.skill_name,
+	si.power_type,
+	si.trigger_type,
+	si.`LEVEL`,
+	si.description,
+	si.initial_value,
+	si.consume_value,
+	si.span,
+	si.remarks,
+	si.open_level,
+	si.`order`,
+	si.attribute1
+        )
+        VALUES (#{id},
+            #{skillName},
+            #{powerType},
+            #{triggerType},
+            #{level},
+            #{description},
+            #{initialValue},
+            #{consumeValue},
+            #{span},
+            #{remarks},
+            #{openLevel},
+            #{order},
+            #{attribute1}
+            )
+    </insert>
+</mapper>

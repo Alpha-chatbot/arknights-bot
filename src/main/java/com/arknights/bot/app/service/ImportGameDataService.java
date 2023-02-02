@@ -1,6 +1,10 @@
 package com.arknights.bot.app.service;
 
 import com.arknights.bot.domain.entity.GroupsEventInfo;
+import com.arknights.bot.domain.entity.OperatorBaseInfo;
+import com.arknights.bot.domain.entity.SkillLevelInfo;
+
+import java.util.List;
 
 /**
  * Created by wangzhen on 2023/2/1 18:01
@@ -9,8 +13,39 @@ import com.arknights.bot.domain.entity.GroupsEventInfo;
 public interface ImportGameDataService {
 
     /**
-     * 干员基础信息导入
+     * 导入操作
      * @param content
      */
-    void OperatorBaseInfoImport(String content);
+    void gameDataImport(String content);
+
+    /**
+     * 干员信息导入
+     * @param content
+     */
+    void operatorBaseInfoImport(String content);
+
+    /**
+     * 技能信息导入
+     * @param content
+     */
+    void skillInfoImport(String content);
+
+    /**
+     * 插入干员数据
+     * @param operatorBaseInfoList
+     */
+    void insertOperatorInfo(List<OperatorBaseInfo> operatorBaseInfoList);
+
+    /**
+     * 处理技能字符串
+     * @param result
+     * @param order
+     */
+    void handleSkillInfo(String result, Long order);
+
+    /**
+     * 插入技能数据
+     * @param skillLevelInfoList
+     */
+    void insertSkillInfo(List<SkillLevelInfo> skillLevelInfoList);
 }
