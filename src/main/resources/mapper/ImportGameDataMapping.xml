@@ -2,7 +2,10 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.arknights.bot.infra.mapper.ImportGameDataMapper">
     <select id="selectOperatorInfo" resultType="com.arknights.bot.domain.entity.OperatorBaseInfo">
-        SELECT *
+        SELECT
+        obi.id,
+        obi.name,
+        obi.operator_id
         FROM operator_base_info obi
         where
         1=1
@@ -14,41 +17,68 @@
 
     <insert id="insertOperatorBaseInfo" parameterType="com.arknights.bot.domain.entity.OperatorBaseInfo">
         INSERT INTO operator_base_info (operator_id,
-                                name
-        )
+                                        name)
         VALUES (#{operatorId},
-                #{name}) on DUPLICATE KEY UPDATE
+                #{name}) on DUPLICATE KEY
+        UPDATE
             operator_id = #{operatorId}
     </insert>
 
     <insert id="insertSkillInfo" parameterType="com.arknights.bot.domain.entity.SkillLevelInfo">
-        INSERT INTO skill_info si (	si.id,
-	si.skill_name,
-	si.power_type,
-	si.trigger_type,
-	si.`LEVEL`,
-	si.description,
-	si.initial_value,
-	si.consume_value,
-	si.span,
-	si.remarks,
-	si.open_level,
-	si.`order`,
-	si.attribute1
+        INSERT INTO skill_info  (
+	skill_code,
+    skill_name,
+	power_type,
+	trigger_type,
+	skill_LEVEL,
+	description,
+	initial_value,
+	consume_value,
+	span,
+	remarks,
+	open_level,
+	skill_order,
+	attribute1
         )
-        VALUES (#{id},
+        VALUES (
+            #{skillCode},
             #{skillName},
             #{powerType},
             #{triggerType},
-            #{level},
+            #{skillLevel},
             #{description},
             #{initialValue},
             #{consumeValue},
             #{span},
             #{remarks},
             #{openLevel},
-            #{order},
+            #{skillOrder},
             #{attribute1}
             )
     </insert>
+
+    <select id="selectSkillInfoByCode" resultType="com.arknights.bot.domain.entity.SkillLevelInfo">
+        select * from skill_info
+        where skill_code = #{skillCode}
+    </select>
+
+    <update id="updateSkillInfoById" parameterType="com.arknights.bot.domain.entity.SkillLevelInfo">
+        update  skill_info
+        set
+            skill_code = #{skillCode},
+            skill_name = #{skillName},
+            power_type = #{powerType},
+            trigger_type = #{triggerType},
+            skill_LEVEL = #{skillLevel},
+            description = #{description},
+            initial_value = #{initialValue},
+            consume_value = #{consumeValue},
+            span = #{span},
+            remarks = #{remarks},
+            open_level = #{openLevel},
+            skill_order = #{skillOrder},
+            attribute1 = #{attribute1}
+
+        where id=#{id}
+    </update>
 </mapper>

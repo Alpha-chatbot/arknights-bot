@@ -1,5 +1,9 @@
 package com.arknights.bot;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.arknights.bot.app.service.ImportGameDataService;
+import com.arknights.bot.app.service.impl.ImportGameDataServiceImpl;
 import com.arknights.bot.domain.entity.OperatorBaseInfo;
 import com.arknights.bot.domain.entity.SkillLevelInfo;
 import com.arknights.bot.infra.constant.Constance;
@@ -20,27 +24,27 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.safety.Whitelist;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+// @RunWith(SpringRunner.class)
 @Slf4j
 @SpringBootTest
 public class BotApplicationTests {
 
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36";
-
+    private final static String FILE_PATH_PREFIX = "/zoe/arknights-bot/data";
 
     @Test
     public void contextLoads() {
@@ -101,7 +105,7 @@ public class BotApplicationTests {
         String reg = "[\n-\r]";
         Pattern p = Pattern.compile(reg);
         Matcher m = p.matcher(str);
-        return m.replaceAll("");
+        return m.replaceAll(",");
     }
 
 
@@ -144,7 +148,7 @@ public class BotApplicationTests {
         // url编码：对于中文,模仿HTML源码中字符集设定进行转换,可能是 UTF-8 或GBK 等
         String name = "";
         try {
-            String sEncode = URLEncoder.encode("风笛", "UTF-8");
+            String sEncode = URLEncoder.encode("伺夜", "UTF-8");
             System.out.println("encode后:" + sEncode);
             name = sEncode;
             String sDecode = URLDecoder.decode(sEncode, "UTF-8");
@@ -242,17 +246,27 @@ public class BotApplicationTests {
 
                 log.info("开始字符串拆分与数据插入");
                 if (StringUtils.isNotBlank(s1)) {
-                    insertSkillInfo(s1, 1L);
+                    insertSkillInfo(s1, 1);
                     log.info("技能一插入完成");
                 } else {
                     log.error("技能拆分异常，当前为空");
                 }
+                try {
+                    Thread.sleep(6000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 if (StringUtils.isNotBlank(s2)) {
-                    insertSkillInfo(s2, 2L);
+                    insertSkillInfo(s2, 2);
                     log.info("技能二插入完成");
                 }
+                try {
+                    Thread.sleep(6000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 if (StringUtils.isNotBlank(s3)) {
-                    insertSkillInfo(s3, 3L);
+                    insertSkillInfo(s3, 3);
                     log.info("技能三插入完成");
                 }
 
@@ -262,13 +276,20 @@ public class BotApplicationTests {
 
     }
 
-    public void insertSkillInfo(String result, Long order) {
+    public void insertSkillInfo(String result, Integer order) {
         log.info("按连续空格拆分行");
         String[] strArray = result.split("\\s+");
         if (ObjectUtils.isEmpty(strArray) || strArray.length < 30) {
             log.info("解析异常，技能资料不全");
             return;
         }
+
+        // demo 临时测试
+        for(String line : strArray){
+            System.out.println("=====");
+            System.out.println(line);
+        }
+
         String openLevel = strArray[0];
         String skillName = strArray[2];
         if (skillName.startsWith(Constance.SKILL_NAME_CH)) {
@@ -284,9 +305,9 @@ public class BotApplicationTests {
             StringBuilder remarks = new StringBuilder();
             for (String line : strArray) {
                 // 技能序号，比如技能一为1
-                skillLevelInfo.setOrder(order);
+                skillLevelInfo.setSkillOrder(order);
                 // 技能等级
-                skillLevelInfo.setLevel((long) i);
+                skillLevelInfo.setSkillLevel((long) i);
                 // 技能解锁等级
                 skillLevelInfo.setOpenLevel(openLevel);
                 // 技能名
@@ -361,9 +382,9 @@ public class BotApplicationTests {
                         }
                     }
                 }
-                skillLevelInfoList.add(skillLevelInfo);
             }
             skillLevelInfo.setRemarks(remarks.toString());
+            skillLevelInfoList.add(skillLevelInfo);
             System.out.println("=====");
             log.info("打印实体内容:{}", skillLevelInfo);
         }
@@ -421,65 +442,180 @@ public class BotApplicationTests {
 
     @Test
     public void saad() {
-        String name = "";
+
+        String str = "下次攻击造成相当于攻击力<@ba.vup>{atk_scale:0%}</>的法术伤害，命中目标在<@ba.vup>3</>秒内防御力<@ba.vup>-{-def}</>并持续受到灼烧伤害\\\n<@ba.rem>可充能{ct}次</>";
+        String def = "-100.0";
+        String atk_scale = "1.3";
+        String ct = "2.0";
+        // 处理字符串中的无用字符
+        // 去除回车符
+        str = replaceEnter(str);
+        // 移除术语标识
+        Pattern pattern1 = Pattern.compile("([\\+\\-\\*]\\{)[\\+\\-\\*]");
+        Matcher matcher1 = pattern1.matcher(str);
+        int count = 0;
+        while (matcher1.find()) {
+            count++;
+        }
+        String result = matcher1.replaceAll("\\{");
+
+        Pattern pattern2 = Pattern.compile("(<@ba\\.vup>)");
+        Matcher matcher2 = pattern2.matcher(result);
+        count = 0;
+        while (matcher2.find()) {
+            count++;
+        }
+        result = matcher2.replaceAll("");
+
+        Pattern pattern3 = Pattern.compile("(<@ba\\.rem>)");
+        Matcher matcher3 = pattern3.matcher(result);
+        count = 0;
+        while (matcher3.find()) {
+            count++;
+        }
+        result = matcher3.replaceAll("");
+
+        Pattern pattern4 = Pattern.compile("(<\\/\\>)");
+        Matcher matcher4 = pattern4.matcher(result);
+        count = 0;
+        while (matcher4.find()) {
+            count++;
+        }
+        // 统一替换
+        result = matcher4.replaceAll("");
+
+        String regex = "(\\{)|(\\}|(\\|)|(:))";
+        result = result.replaceAll(regex, "");
+        log.info("首次替换后:{}", result);
+        result = result.replaceAll("def", "-100.0");
+        result = result.replaceAll("atk_scale", "1.3");
+        result = result.replaceAll("ct", "2.0");
+        // 变为整型格式
+        String regexInt = "(\\.0)|(\\.)";
+        result = result.replaceAll(regexInt, "");
+        log.info("二次替换后:{}", result);
+    }
+
+    //把一个文件中的内容读取成一个String字符串
+    public static String getStr(File jsonFile){
+        String jsonStr = "";
         try {
-            String sEncode = URLEncoder.encode("干员一览", "UTF-8");
-            System.out.println("encode后:" + sEncode);
-            name = sEncode;
-            String sDecode = URLDecoder.decode(sEncode, "UTF-8");
-            System.out.println("decode后:" + sDecode);
-        } catch (UnsupportedEncodingException e) {
+            FileReader fileReader = new FileReader(jsonFile);
+            Reader reader = new InputStreamReader(new FileInputStream(jsonFile),"utf-8");
+            int ch = 0;
+            StringBuffer sb = new StringBuffer();
+            while ((ch = reader.read()) != -1) {
+                sb.append((char) ch);
+            }
+            fileReader.close();
+            reader.close();
+            jsonStr = sb.toString();
+            return jsonStr;
+        } catch (IOException e) {
             e.printStackTrace();
+            return null;
         }
-
-        String url = "https://wiki.biligame.com/arknights/" + name;
-        String result = sendGet(url);
-
-        result = useJsoup(result);
-        log.info("result\n,{}", result);
-
-        // 奇怪的截取判定)
-        String matchS1 = "特种";
-        String matchS2 = "取自";
-        Pattern startP = Pattern.compile(matchS1);
-        Pattern endP = Pattern.compile(matchS2);
+    }
 
 
-        Matcher matcherStart = startP.matcher(result);
-        Matcher matcherEnd = endP.matcher(result);
+    @Test
+    public void zoeTestt(){
+        String uploadFileSavePath = "F:\\backup";
+        // String uploadFileSavePath = FILE_PATH_PREFIX;
+        // character_table.json  skill_table.json
 
-        int start = 0;
-        int end = 0;
-        int length = result.length();
-        log.info("总长度{}", length);
-        // 开始位置
-        if (matcherStart.find()) {
-            log.info("match start right ");
-            start = matcherStart.start();
-            // 结束位置
-            if (matcherEnd.find()) {
-                log.info("match end right ");
-                end = matcherEnd.start();
+        // 下载文件进行解析
+        // File downloadFile = new File(uploadFileSavePath + File.separator + "character_table.json");
+        File jsonFile = new File(uploadFileSavePath + File.separator + "character_table.json");
+        //通过上面那个方法获取json文件的内容
+        String jsonData = getStr(jsonFile);
+        //转json对象
+        JSONObject parse = (JSONObject)JSONObject.parse(jsonData);
+        //获取主要数据
+        //遍历key和value
+        int i = 0;
+        for (Map.Entry<String, Object> entry : parse.entrySet()) {
+            // log.info("这条JSON的Key是："+entry.getKey());
+            // log.info("这条JSON的Value是："+ entry.getValue());
+            String key = entry.getKey();
+            JSONObject valueObject =(JSONObject)entry.getValue();
+            // 干员中文名称
+            String zh_name = valueObject.getString("name");
+            // 干员英文名
+            String en_name = valueObject.getString("appellation");
+            // 转为小写方便匹配其余json信息
+            en_name = en_name.toLowerCase();
+            // 招聘合同
+            String itemUsage = valueObject.getString("itemUsage");
+            // 潜能物id，这里用于排除道具类的数据
+            String potentialItemId = valueObject.getString("potentialItemId");
+            if(StringUtils.isBlank(potentialItemId)){
+                continue;
             }
-            if (ObjectUtils.isNotEmpty(start) && ObjectUtils.isNotEmpty(end)) {
-                log.info("起始下标位置{}，结束下标位置{}", start, end);
-                result = result.substring(start + (matchS1.length()), end);
-                log.info("按连续空格拆分行");
-                String[] strArray = result.split("\\s+");
-                List<OperatorBaseInfo> operatorBaseInfoList = new ArrayList<>();
-                for (String line : strArray) {
-                    if(StringUtils.equals(line, "异") || StringUtils.equals(line, "活") || StringUtils.equals(line, "限") || StringUtils.equals(line, "升")){
-                        continue;
-                    }
-                    Calendar now = Calendar.getInstance();
-                    Long processId = now.getTime().getTime();
-                    OperatorBaseInfo operatorBaseInfo = OperatorBaseInfo.builder().operatorId(processId).name(line).build();
-                    operatorBaseInfoList.add(operatorBaseInfo);
-                    System.out.println(line);
-                }
-                log.info("插入干员完成，当前list长度{}", operatorBaseInfoList.size());
+
+            // 获取技能id,通过skillId去匹配skill_table
+            JSONArray skillArr = valueObject.getJSONArray("skills");
+            int order = 1;
+            for (int j = 0; j < skillArr.size(); j++) {
+                JSONObject jsonObject = skillArr.getJSONObject(j);
+                String skillId = jsonObject.getString("skillId");
+                // 解锁条件
+                JSONObject unlockCond = jsonObject.getJSONObject("unlockCond");
+                // 0表示精英0开放
+                String openLevel = unlockCond.getString("phase");
+
+                log.info("技能信息: 技能id:{}, 技能解锁条件:{}, 技能序号:{}", skillId, openLevel, order);
+                order++;
             }
+            i++;
+            log.info("干员基本信息: key值:{},干员中文名:{}, 干员英文名:{}, 招聘合同:{}", key, zh_name, en_name, itemUsage);
+            // 吐槽:为什么道具也会放在人物表里...
         }
+        log.info("当前干员总数:{}", i);
+
+    }
+
+    @Test
+    public void zzttt(){
+        String uploadFileSavePath = "F:\\backup";
+        // String uploadFileSavePath = FILE_PATH_PREFIX;
+        // character_table.json  skill_table.json
+
+        // 下载文件进行解析
+        // File downloadFile = new File(uploadFileSavePath + File.separator + "character_table.json");
+        File jsonFile = new File(uploadFileSavePath + File.separator + "skill_table.json");
+        //通过上面那个方法获取json文件的内容
+        String jsonData = getStr(jsonFile);
+        //转json对象
+        JSONObject parse = (JSONObject)JSONObject.parse(jsonData);
+        //获取主要数据
+        //遍历key和value
+        int i = 0;
+        for (Map.Entry<String, Object> entry : parse.entrySet()) {
+            String key = entry.getKey();
+            String[] strs = key.split("_");
+            log.info("拆分后段数应>=3,当前段数为" + strs.length);
+            // 映射code
+            String mappingCode = strs[2];
+            JSONObject valueObject =(JSONObject)entry.getValue();
+            // 干员中文名称
+            String zh_name = valueObject.getString("name");
+            // 干员英文名
+            String en_name = valueObject.getString("appellation");
+            // 转为小写方便匹配其余json信息
+            en_name = en_name.toLowerCase();
+            // 招聘合同
+            String itemUsage = valueObject.getString("itemUsage");
+            // 潜能物id，这里用于排除道具类的数据
+            String potentialItemId = valueObject.getString("potentialItemId");
+            if(StringUtils.isBlank(potentialItemId)){
+                continue;
+            }
+            i++;
+            log.info("干员基本信息: key值:{}, 映射code：{},干员中文名:{}, 干员英文名:{}, 招聘合同:{}", key, mappingCode, zh_name, en_name, itemUsage);
+            // 吐槽:为什么道具也会放在人物表里...
+        }
+        log.info("当前干员总数:{}", i);
 
     }
 

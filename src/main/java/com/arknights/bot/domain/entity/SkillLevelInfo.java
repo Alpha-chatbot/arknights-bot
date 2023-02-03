@@ -13,6 +13,8 @@ public class SkillLevelInfo {
 
     @ApiModelProperty(value = "主键id")
     private Long id;
+    @ApiModelProperty(value = "技能id")
+    private String skillCode;
     @ApiModelProperty(value = "技能名称")
     private String skillName;
     @ApiModelProperty(value = "技力类型(自动回复等)")
@@ -20,7 +22,7 @@ public class SkillLevelInfo {
     @ApiModelProperty(value = "触发类型(自动触发等)")
     private String triggerType;
     @ApiModelProperty(value = "等级(专精等级以8,9,10代替)")
-    private Long level;
+    private Long skillLevel;
     @ApiModelProperty(value = "技能描述")
     private String description;
     @ApiModelProperty(value = "初始技力")
@@ -32,7 +34,7 @@ public class SkillLevelInfo {
     @ApiModelProperty(value = "备注")
     private String remarks;
     @ApiModelProperty(value = "技能序号（比如技能一，技能二）")
-    private Long order;
+    private Integer skillOrder;
     @ApiModelProperty(value = "技能解锁条件")
     private String openLevel;
     @ApiModelProperty(value = "附加字段1")

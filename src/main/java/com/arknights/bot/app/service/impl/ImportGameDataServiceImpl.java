@@ -1,7 +1,12 @@
 package com.arknights.bot.app.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.arknights.bot.api.dto.SpDataDto;
 import com.arknights.bot.app.service.ImportGameDataService;
 import com.arknights.bot.domain.entity.OperatorBaseInfo;
+import com.arknights.bot.domain.entity.PageRequest;
 import com.arknights.bot.domain.entity.SkillLevelInfo;
 import com.arknights.bot.infra.constant.Constance;
 import com.arknights.bot.infra.mapper.ImportGameDataMapper;
@@ -9,7 +14,6 @@ import com.arknights.bot.infra.util.RequestMsgUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONObject;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
@@ -18,13 +22,17 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.arknights.bot.infra.util.TextToImageUtil.replaceEnter;
 
 /**
  * Created by wangzhen on 2023/2/1 18:00
@@ -52,7 +60,7 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
             return;
         }
         switch (content) {
-            case "干员一览":
+            case "干员导入":
                 // 导入干员列表
                 operatorBaseInfoImport(content);
                 break;
@@ -67,67 +75,72 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
 
     @Override
     public void operatorBaseInfoImport(String content) {
-        String name = content;
-        try {
-            String sEncode = URLEncoder.encode(name, "UTF-8");
-            log.info("encode后:" + sEncode);
-            name = sEncode;
-            String sDecode = URLDecoder.decode(sEncode, "UTF-8");
-            log.info("decode后:" + sDecode);
-        } catch (
-                UnsupportedEncodingException e) {
-            e.printStackTrace();
+
+        String uploadFileSavePath = "F:\\backup";
+        // String uploadFileSavePath = FILE_PATH_PREFIX;
+
+        // 下载文件进行解析
+        // File downloadFile = new File(uploadFileSavePath + File.separator + "character_table.json");
+        File jsonFile = new File(uploadFileSavePath + File.separator + "character_table.json");
+        //通过上面那个方法获取json文件的内容
+        String jsonData = getStr(jsonFile);
+        //转json对象
+        com.alibaba.fastjson.JSONObject parse = (com.alibaba.fastjson.JSONObject) com.alibaba.fastjson.JSONObject.parse(jsonData);
+        //获取主要数据
+        //遍历key和value
+        List<OperatorBaseInfo> operatorBaseInfoList = new ArrayList<>();
+        List<SkillLevelInfo> skillLevelInfoList = new ArrayList<>();
+        for (Map.Entry<String, Object> entry : parse.entrySet()) {
+            String key = entry.getKey();
+            com.alibaba.fastjson.JSONObject valueObject = (com.alibaba.fastjson.JSONObject) entry.getValue();
+            // 干员中文名称
+            String zhName = valueObject.getString("name");
+            // 干员英文名
+            String enName = valueObject.getString("appellation");
+            // 转为小写方便匹配其余json信息
+            enName = enName.toLowerCase();
+            // 招聘合同
+            String itemUsage = valueObject.getString("itemUsage");
+            // 潜能物id，这里用于排除道具类的数据,吐槽:为什么道具和召唤物也会放在人物表里...这里暂时先只统计干员
+            String potentialItemId = valueObject.getString("potentialItemId");
+            if (StringUtils.isBlank(potentialItemId)) {
+                continue;
+            }
+            OperatorBaseInfo operatorBaseInfo = new OperatorBaseInfo();
+            operatorBaseInfo.setKey(key);
+            operatorBaseInfo.setEnName(enName);
+            operatorBaseInfo.setZhName(zhName);
+            operatorBaseInfo.setItemUsage(itemUsage);
+
+            // 获取技能id,先插表后通过skillId再去匹配skill_table
+            JSONArray skillArr = valueObject.getJSONArray("skills");
+            int order = 1;
+            for (int j = 0; j < skillArr.size(); j++) {
+                com.alibaba.fastjson.JSONObject jsonObject = skillArr.getJSONObject(j);
+                String skillId = jsonObject.getString("skillId");
+                // 解锁条件
+                JSONObject unlockCond = jsonObject.getJSONObject("unlockCond");
+                // 0表示精英0开放
+                String openLevel = unlockCond.getString("phase");
+                log.info("技能信息: 技能id:{}, 技能解锁条件:{}, 技能序号:{}", skillId, openLevel, order);
+                SkillLevelInfo skillLevelInfo = new SkillLevelInfo();
+                skillLevelInfo.setSkillCode(skillId);
+                skillLevelInfo.setOpenLevel(openLevel);
+                skillLevelInfo.setSkillOrder(order);
+                skillLevelInfoList.add(skillLevelInfo);
+                order++;
+            }
+            log.info("干员基本信息: key值:{},干员中文名:{}, 干员英文名:{}, 招聘合同:{}", key, zhName, enName, itemUsage);
+
+            operatorBaseInfoList.add(operatorBaseInfo);
         }
 
-        String url = BILI_WIKI_URL + name;
-        String result = requestMsgUtil.sendGet(url);
-
-        result = requestMsgUtil.useJsoup(result);
-        log.info("result\n,{}", result);
-
-        // 奇怪的截取判定)
-        String matchS1 = Constance.OPERATOR_START_LOCAL;
-        String matchS2 = Constance.OPERATOR_END_LOCAL;
-        Pattern startP = Pattern.compile(matchS1);
-        Pattern endP = Pattern.compile(matchS2);
-
-
-        Matcher matcherStart = startP.matcher(result);
-        Matcher matcherEnd = endP.matcher(result);
-
-        int start = 0;
-        int end = 0;
-        int length = result.length();
-        log.info("总长度{}", length);
-        // 开始位置
-        if (matcherStart.find()) {
-            log.info("match start right ");
-            start = matcherStart.start();
-            // 结束位置
-            if (matcherEnd.find()) {
-                log.info("match end right ");
-                end = matcherEnd.start();
-            }
-            if (ObjectUtils.isNotEmpty(start) && ObjectUtils.isNotEmpty(end)) {
-                log.info("起始下标位置{}，结束下标位置{}", start, end);
-                result = result.substring(start + (matchS1.length()), end);
-                log.info("按连续空格拆分行");
-                String[] strArray = result.split("\\s+");
-                List<OperatorBaseInfo> operatorBaseInfoList = new ArrayList<>();
-                Long processId = 10L;
-                for (String line : strArray) {
-                    if (StringUtils.isBlank(line) || StringUtils.equals(line, "异") || StringUtils.equals(line, "活") || StringUtils.equals(line, "限") || StringUtils.equals(line, "升")) {
-                        continue;
-                    }
-                    OperatorBaseInfo operatorBaseInfo = OperatorBaseInfo.builder().operatorId(processId).name(line).build();
-                    operatorBaseInfoList.add(operatorBaseInfo);
-                    log.info("干员名:{}", line);
-                    processId++;
-                }
-                log.info("统计干员{}名，准备插入", operatorBaseInfoList.size());
-                ImportGameDataService inf = (ImportGameDataService) AopContext.currentProxy();
-                inf.insertOperatorInfo(operatorBaseInfoList);
-            }
+        log.info("统计干员{}名,技能list大小:{}，准备插表", operatorBaseInfoList.size(), skillLevelInfoList.size());
+        if (!CollectionUtils.isEmpty(operatorBaseInfoList) && !CollectionUtils.isEmpty(skillLevelInfoList)) {
+            ImportGameDataService inf = (ImportGameDataService) AopContext.currentProxy();
+            inf.insertOperatorInfo(operatorBaseInfoList, skillLevelInfoList);
+        } else {
+            log.error("数据为空, 需要检查数据");
         }
     }
 
@@ -138,124 +151,124 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
      */
     @Override
     public void skillInfoImport(String content) {
+        String uploadFileSavePath = "F:\\backup";
+        // String uploadFileSavePath = FILE_PATH_PREFIX;
 
-        List<OperatorBaseInfo> operatorBaseInfos = importGameDataMapper.selectOperatorInfo(null);
-        for (OperatorBaseInfo item : operatorBaseInfos) {
-            String name = "";
-            if (StringUtils.isBlank(item.getName())) {
+        // 下载文件进行解析
+        // File downloadFile = new File(uploadFileSavePath + File.separator + "character_table.json");
+        File jsonFile = new File(uploadFileSavePath + File.separator + "skill_table.json");
+        //通过上面那个方法获取json文件的内容
+        String jsonData = getStr(jsonFile);
+        //转json对象
+        com.alibaba.fastjson.JSONObject parse = (com.alibaba.fastjson.JSONObject) com.alibaba.fastjson.JSONObject.parse(jsonData);
+        //获取主要数据
+        //遍历key和value
+        List<SkillLevelInfo> skillUpdateList = new ArrayList<>();
+        List<SkillLevelInfo> skillInsertList = new ArrayList<>();
+        for (Map.Entry<String, Object> entry : parse.entrySet()) {
+            // key对应skillCode
+            String key = entry.getKey();
+            com.alibaba.fastjson.JSONObject valueObject = (com.alibaba.fastjson.JSONObject) entry.getValue();
+            // skillId对应值也应与一级key相同
+            String skillCode = valueObject.getString("skillId");
+            // 查询先前插入的skillId和序号 保留openLevel和skillOrder
+            List<SkillLevelInfo> skillLevelInfoList = importGameDataMapper.selectSkillInfoByCode(skillCode);
+            if (CollectionUtils.isEmpty(skillLevelInfoList) || skillLevelInfoList.size() > 1) {
                 continue;
             }
-            name = item.getName();
-            try {
-                String sEncode = URLEncoder.encode(name, "UTF-8");
-                log.info("encode后:" + sEncode);
-                name = sEncode;
-                String sDecode = URLDecoder.decode(sEncode, "UTF-8");
-                log.info("decode后:" + sDecode);
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
+            SkillLevelInfo skillLevelInfo = skillLevelInfoList.get(0);
+            String openLevel = skillLevelInfo.getOpenLevel();
+            Integer skillOrder = skillLevelInfo.getSkillOrder();
+
+            // 获取技能详细信息，levels长度为10，对应10个技能等级（1-7，专1-3）
+            JSONArray skillArr = valueObject.getJSONArray("levels");
+            for (int j = 1; j <= skillArr.size(); j++) {
+                com.alibaba.fastjson.JSONObject jsonObject = skillArr.getJSONObject(j);
+                String skillId = jsonObject.getString("skillId");
+                // 技能名（中）
+                String skillName = jsonObject.getString("name");
+                // 技能描述
+                String description = jsonObject.getString("description");
+                // 1表示手动触发 2表示自动触发
+                String triggerType = jsonObject.getString("skillType");
+                if ("1".equals(triggerType)) {
+                    triggerType = Constance.TYPE_F;
+                } else if ("2".equals(triggerType)) {
+                    triggerType = Constance.TYPE_S;
+                }
+                // 技力相关
+                JSONObject spData = jsonObject.getJSONObject("spData");
+                // json转为实体类
+                SpDataDto spDataDto = JSON.toJavaObject(spData, SpDataDto.class);
+                // 技力类型(1为自动回复,2为攻击回复,8好像为召唤物类型)
+                String powerType = spDataDto.getSpType();
+                if ("1".equals(powerType)) {
+                    powerType = Constance.TYPE_SP_F;
+                } else if ("2".equals(powerType)) {
+                    powerType = Constance.TYPE_SP_S;
+                }
+                // 初始技力
+                Long initialValue = Long.valueOf(spDataDto.getInitSp());
+                // 技力消耗
+                Long consumeValue = Long.valueOf(spDataDto.getSpCost());
+                if (ObjectUtils.isEmpty(spDataDto)) {
+                    log.info("技力相关解析数据异常");
+                    continue;
+                }
+                // 技能持续时间
+                String duration = jsonObject.getString("duration");
+                if (Long.parseLong(duration) < 0) {
+                    duration = "0";
+                }
+                // 技能描述中的变量k-v
+                JSONArray blackboard = valueObject.getJSONArray("blackboard");
+                Map<String, String> descMap = new HashMap<>();
+                for (int k = 1; k <= blackboard.size(); k++) {
+                    com.alibaba.fastjson.JSONObject kvObject = skillArr.getJSONObject(j);
+                    descMap.put(kvObject.getString("key"), kvObject.getString("value"));
+                }
+                try {
+                    // 处理多余字符
+                    description = handleDesc(description, descMap);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                log.info("技能信息: 技能id:{}, 技能描述:{}", skillId, description);
+
+                SkillLevelInfo skillInfo = new SkillLevelInfo();
+                skillInfo.setSkillName(skillName);
+                skillInfo.setDescription(description);
+                skillInfo.setTriggerType(triggerType);
+                skillInfo.setPowerType(powerType);
+                skillInfo.setInitialValue(initialValue);
+                skillInfo.setConsumeValue(consumeValue);
+                skillInfo.setSpan(Long.valueOf(duration));
+                skillInfo.setSkillLevel((long) j);
+
+                skillInfo.setSkillOrder(skillOrder);
+                skillInfo.setOpenLevel(openLevel);
+                // 对原数据进行更新，以及插入新数据
+                if (j == 1) {
+                    skillInfo.setId(skillLevelInfo.getId());
+                    skillUpdateList.add(skillInfo);
+                } else {
+                    skillInsertList.add(skillInfo);
+                }
             }
-
-            String url = PRTS_WIKI_URL + "?title=" + name + "&action=edit";
-            String result = requestMsgUtil.sendGet(url);
-
-            result = requestMsgUtil.useJsoup(result);
-            // log.info("抓取内容去除html格式后:{}\n", result);
-
-            // 截取技能部分
-            String matchS1 = "==技能==";
-            String matchS2 = "==后勤技能==";
-            String matchSkillOne = "'''技能1";
-            String matchSkillTwo = "'''技能2";
-            String matchSkillThree = "'''技能3";
-            Pattern startP = Pattern.compile(matchS1);
-            Pattern endP = Pattern.compile(matchS2);
-            Pattern skillOne = Pattern.compile(matchSkillOne);
-            Pattern skillTwo = Pattern.compile(matchSkillTwo);
-            Pattern skillThree = Pattern.compile(matchSkillThree);
-
-            Matcher matcherStart = startP.matcher(result);
-            Matcher matcherEnd = endP.matcher(result);
-            // 似乎同一对象的find()方法不能重复调用:
-            // This method starts at the beginning of this matcher's region,
-            // or, if a previous invocation of the method was successful and the matcher has not since been reset,
-            // at the first character not matched by the previous match
-            // PS:如果同一对象不调用matcher.reset()方法，下次find匹配会从上一次find()成功匹配的结束位置开始
-
-            int start = 0;
-            int end = 0;
-            String firstSkillContent = "";
-            String secondSkillContent = "";
-            String thirdSkillContent = "";
-            int length = result.length();
-            log.info("总长度{}", length);
-            // 开始位置
-            if (matcherStart.find()) {
-                log.info("match start right ");
-                start = matcherStart.start();
-                // 结束位置
-                if (matcherEnd.find()) {
-                    log.info("match end right ");
-                    end = matcherEnd.start();
-                }
-                // 拆分最多三个部分，对应三个技能
-                if (ObjectUtils.isNotEmpty(start) && ObjectUtils.isNotEmpty(end)) {
-                    log.info("起始下标位置{}，结束下标位置{}", start, end);
-                    result = result.substring(start + (matchS1.length()), end);
-                    // 去除多余字符
-                    result = requestMsgUtil.replaceCharacter(result);
-                    log.info("初步截取技能部分字符串长度{}", result.length());
-                    Matcher matcherSkillOne = skillOne.matcher(result);
-                    Matcher matcherSkillTwo = skillTwo.matcher(result);
-                    Matcher matcherSkillThree = skillThree.matcher(result);
-                    // 抓取第一个技能
-                    if (matcherSkillOne.find()) {
-                        int firstIndex = 0;
-                        int secondIndex = 0;
-                        int thirdIndex = 0;
-                        firstIndex = matcherSkillOne.start();
-                        log.info("匹配到一技能字段开始位置:{}", firstIndex);
-                        // 抓取第二个技能
-                        if (matcherSkillTwo.find()) {
-                            secondIndex = matcherSkillTwo.start();
-                            log.info("匹配到二技能字段开始位置{}", secondIndex);
-                            firstSkillContent = result.substring(firstIndex + (matchSkillOne.length()), secondIndex);
-                            // 抓取第三个技能
-                            if (matcherSkillThree.find()) {
-                                thirdIndex = matcherSkillThree.start();
-                                log.info("匹配到三技能字段开始位置{}", thirdIndex);
-                                secondSkillContent = result.substring(secondIndex + (matchSkillTwo.length()), thirdIndex);
-                                thirdSkillContent = result.substring(thirdIndex + (matchSkillThree.length()), result.length() - 1);
-                            } else {
-                                secondSkillContent = result.substring(secondIndex + (matchSkillTwo.length()), result.length() - 1);
-                            }
-                        }
-                    } else {
-                        log.error("抓取技能位置失败");
-                    }
-
-
-                    String s1 = requestMsgUtil.useJsoup(firstSkillContent);
-                    String s2 = requestMsgUtil.useJsoup(secondSkillContent);
-                    String s3 = requestMsgUtil.useJsoup(thirdSkillContent);
-
-                    log.info("开始字符串拆分与数据插入");
-                    if (StringUtils.isNotBlank(s1)) {
-                        handleSkillInfo(s1, 1L);
-                        log.info("技能一插入完成");
-                    } else {
-                        log.error("技能拆分异常，当前为空");
-                    }
-                    if (StringUtils.isNotBlank(s2)) {
-                        handleSkillInfo(s2, 2L);
-                        log.info("技能二插入完成");
-                    }
-                    if (StringUtils.isNotBlank(s3)) {
-                        handleSkillInfo(s3, 3L);
-                        log.info("技能三插入完成");
-                    }
-
-                }
+            // 非事务调用事务方法需要代理调用
+            ImportGameDataService inf = (ImportGameDataService) AopContext.currentProxy();
+            // 更新
+            if (!CollectionUtils.isEmpty(skillUpdateList)) {
+                inf.updateSkillInfo(skillUpdateList);
+            } else {
+                log.error("数据为空, 需要检查数据");
+            }
+            // 插入
+            if (!CollectionUtils.isEmpty(skillInsertList)) {
+                inf.insertSkillInfo(skillInsertList);
+            } else {
+                log.error("数据为空, 需要检查数据");
             }
         }
 
@@ -263,14 +276,115 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void insertOperatorInfo(List<OperatorBaseInfo> operatorBaseInfoList) {
+    public void insertOperatorInfo(List<OperatorBaseInfo> operatorBaseInfoList, List<SkillLevelInfo> skillLevelInfoList) {
+        // 干员基础信息
         for (OperatorBaseInfo line : operatorBaseInfoList) {
             importGameDataMapper.insertOperatorBaseInfo(line);
         }
+        // 技能部分信息
+        for (SkillLevelInfo skillLevelInfo : skillLevelInfoList) {
+            importGameDataMapper.insertSkillInfo(skillLevelInfo);
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void insertSkillInfo(List<SkillLevelInfo> skillLevelInfoList) {
+        for (SkillLevelInfo skillLevelInfo : skillLevelInfoList) {
+            importGameDataMapper.insertSkillInfo(skillLevelInfo);
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void updateSkillInfo(List<SkillLevelInfo> skillLevelInfoList) {
+        // 技能部分信息
+        for (SkillLevelInfo skillLevelInfo : skillLevelInfoList) {
+            importGameDataMapper.updateSkillInfoById(skillLevelInfo);
+        }
+    }
+
+    /**
+     * 把一个文件中的内容读取为字符串
+     *
+     * @param jsonFile
+     * @return
+     */
+    public static String getStr(File jsonFile) {
+        String jsonStr = "";
+        try {
+            FileReader fileReader = new FileReader(jsonFile);
+            Reader reader = new InputStreamReader(new FileInputStream(jsonFile), "utf-8");
+            int ch = 0;
+            StringBuffer sb = new StringBuffer();
+            while ((ch = reader.read()) != -1) {
+                sb.append((char) ch);
+            }
+            fileReader.close();
+            reader.close();
+            jsonStr = sb.toString();
+            return jsonStr;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public String handleDesc(String str, Map<String, String> descMap) {
+        // 处理字符串中的无用字符
+        // 去除回车符
+        str = replaceEnter(str);
+        // 移除术语标识
+        Pattern pattern1 = Pattern.compile("([\\+\\-\\*]\\{)[\\+\\-\\*]");
+        Matcher matcher1 = pattern1.matcher(str);
+        int count = 0;
+        while (matcher1.find()) {
+            count++;
+        }
+        String result = matcher1.replaceAll("\\{");
+
+        Pattern pattern2 = Pattern.compile("(<@ba\\.vup>)");
+        Matcher matcher2 = pattern2.matcher(result);
+        count = 0;
+        while (matcher2.find()) {
+            count++;
+        }
+        result = matcher2.replaceAll("");
+
+        Pattern pattern3 = Pattern.compile("(<@ba\\.rem>)");
+        Matcher matcher3 = pattern3.matcher(result);
+        count = 0;
+        while (matcher3.find()) {
+            count++;
+        }
+        result = matcher3.replaceAll("");
+
+        Pattern pattern4 = Pattern.compile("(<\\/\\>)");
+        Matcher matcher4 = pattern4.matcher(result);
+        count = 0;
+        while (matcher4.find()) {
+            count++;
+        }
+        // 统一替换
+        result = matcher4.replaceAll("");
+
+        String regex = "(\\{)|(\\}|(\\|)|(:))";
+        result = result.replaceAll(regex, "");
+        log.info("首次替换后:{}", result);
+        // 技能数据变量赋值
+        for (Map.Entry<String, String> map : descMap.entrySet()) {
+            String regexTemp = map.getKey();
+            result = result.replaceAll(regexTemp, map.getValue());
+        }
+        // 变为整型格式
+        String regexInt = "(\\.0)|(\\.)";
+        result = result.replaceAll(regexInt, "");
+        log.info("二次替换后:{}", result);
+        return result;
     }
 
     @Override
-    public void handleSkillInfo(String result, Long order) {
+    public void handleSkillInfo(String result, Integer order) {
         log.info("按连续空格拆分行");
         String[] strArray = result.split("\\s+");
         if (ObjectUtils.isEmpty(strArray) || strArray.length < Constance.STR_LENGTH) {
@@ -292,9 +406,9 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
             StringBuilder remarks = new StringBuilder();
             for (String line : strArray) {
                 // 技能序号，比如技能一为1
-                skillLevelInfo.setOrder(order);
+                skillLevelInfo.setSkillOrder(order);
                 // 技能等级
-                skillLevelInfo.setLevel((long) i);
+                skillLevelInfo.setSkillLevel((long) i);
                 // 技能解锁等级
                 skillLevelInfo.setOpenLevel(openLevel);
                 // 技能名
@@ -369,22 +483,14 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
                         }
                     }
                 }
-                skillLevelInfoList.add(skillLevelInfo);
             }
             skillLevelInfo.setRemarks(remarks.toString());
+            skillLevelInfoList.add(skillLevelInfo);
             // log.info("=====打印实体内容:{}", skillLevelInfo);
         }
         if (!CollectionUtils.isEmpty(skillLevelInfoList)) {
             insertSkillInfo(skillLevelInfoList);
         }
     }
-
-    @Override
-    public void insertSkillInfo(List<SkillLevelInfo> skillLevelInfoList) {
-        for (SkillLevelInfo skillLevelInfo : skillLevelInfoList) {
-            importGameDataMapper.insertSkillInfo(skillLevelInfo);
-        }
-    }
-
 
 }

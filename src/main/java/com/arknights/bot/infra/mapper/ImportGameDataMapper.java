@@ -31,4 +31,18 @@ public interface ImportGameDataMapper {
      * @return
      */
     Integer insertSkillInfo(SkillLevelInfo skillLevelInfo);
+
+    /**
+     * 查询技能信息
+     * @param skillCode
+     * @return
+     */
+    List<SkillLevelInfo> selectSkillInfoByCode(String skillCode);
+
+    /**
+     * 更新技能信息
+     * @param skillLevelInfo
+     * @return
+     */
+    int updateSkillInfoById(SkillLevelInfo skillLevelInfo);
 }

@@ -23,9 +23,9 @@ public class UpdateSkillInfoJob {
         try {
             importGameDataService.gameDataImport("技能导入");
         }catch (RuntimeException e){
-            log.error("更新干员基本信息失败");
+            log.error("更新干员技能信息失败");
             e.printStackTrace();
         }
-        log.info("干员基本信息调度完成");
+        log.info("干员技能导入调度结束");
     }
 }

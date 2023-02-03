@@ -119,5 +119,11 @@ public class RequestMsgUtil {
         return result;
     }
 
+    public String replace2Int(String result){
+        String regexInt = "(\\.0)|(\\.)";
+        result = result.replaceAll(regexInt, "");
+        return result;
+    }
+
 
 }

@@ -26,7 +26,7 @@ public class UpdateOperatorBaseDataJob {
     @Async
     public void updateOperatorBaseJob() {
         try {
-            importGameDataService.gameDataImport("干员一览");
+            importGameDataService.gameDataImport("干员导入");
         }catch (RuntimeException e){
             log.error("更新干员基本信息失败");
             e.printStackTrace();

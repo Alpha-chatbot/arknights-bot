@@ -13,6 +13,11 @@ public interface Constance {
     int PAGE_SIZE = 10;
     int STR_LENGTH = 30;
     int SKILL_COUNTS = 10;
+    String TYPE_F = "手动触发";
+    String TYPE_S = "自动触发";
+
+    String TYPE_SP_F = "自动回复";
+    String TYPE_SP_S = "攻击回复";
 
     String TYPE_JUST_TEXT = "text";
 
