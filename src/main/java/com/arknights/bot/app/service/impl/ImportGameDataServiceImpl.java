@@ -27,10 +27,7 @@ import java.io.*;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -242,10 +239,28 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
                     com.alibaba.fastjson.JSONObject kvObject = blackboard.getJSONObject(k-1);
                     descMap.put(kvObject.getString("key"), kvObject.getString("value"));
                 }
-                log.info("打印map:{}", descMap);
+                Set<String> stringSet = descMap.keySet();
+                List<String> unSortList = new ArrayList<>(stringSet);
+                // 按key长度排序，否则可能会在replaceAll时出现替换问题
+                unSortList.sort((o1, o2) -> {
+                    if(o1.length() > o2.length()){
+                        //这里注意，比较o1与o2的大小，若o1 大于 o2 默认会返回 1
+                        //但是sort排序，默认的是升序排序，所以重写的时候将值改写返回-1，就会变成倒叙排序
+                        return -1;
+                    }else if(o1.length() == o2.length()){
+                        return 0;
+                    }else {
+                        return 1;
+                    }
+                });
+                Map<String, String> desMap = new LinkedHashMap<>();
+                for(String item : unSortList){
+                    desMap.put(item, descMap.get(item));
+                }
+                log.info("打印map:{}", desMap);
                 try {
                     // 处理多余字符
-                    description = handleDesc(description, descMap);
+                    description = handleDesc(description, desMap);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -393,6 +408,9 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
 
         String regex = "(\\{)|(\\}|(\\|)|(:))";
         result = result.replaceAll(regex, "");
+        // 替换术语等词缀
+        String regexP = "(<\\$ba\\.[a-z]{1,12}>)|(<@ba\\.[a-z]{1,12}>)|(<\\$ba\\.[a-z]{1,9}\\.[a-z]{1,9}>)";
+        result = result.replaceAll(regexP, "");
         // 这里不能用replaceAll，因为用了的话不添加转义字符会无法识别替换，而且每个变量只出现一次，用replace即可
         for (Map.Entry<String, String> map : descMap.entrySet()) {
             String regexTemp = map.getKey();
@@ -408,8 +426,7 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
             String regexPercent = "[0-9][.][0-9]{1,2}0%";
             result = result.replaceAll(regexPercent, String.valueOf((long)v)+"%");
         }
-        String regexP = "(<\\$ba\\.[a-z]{1,8}>)|(<@ba\\.[a-z]{1,8}>)|(<\\$ba\\.[a-z]{1,9}\\.[a-z]{1,9}>)";
-        result = result.replaceAll(regexP, "");
+
         log.info("最终替换后:{}", result);
         return result;
 

@@ -444,9 +444,7 @@ public class BotApplicationTests {
     public void saad() {
 
         // 攻击力<@ba.vup>+{atk:0%}</>，防御力<@ba.vup>+{def:0%}</>，每次攻击额外造成相当于攻击力<@ba.vup>{attack@blemsh_s_3_extra_dmg[magic].atk_scale:0%}</>的法术伤害，并恢复周围一名<@ba.rem>其他</>友方单位相当于攻击力<@ba.vup>{heal_scale:0%}</>的生命
-        String str = "<@ba.rem>可以在下列状态和初始状态间切换：</>\\\\n防御力<@ba.vdown>-{-def:0%}</>，" +
-                "攻击距离<@ba.vdown>缩短</>，攻击力<@ba.vup>+{atk:0%}</>，阻挡数<@ba.vup>+{block_cnt}</>，" +
-                "同时攻击阻挡的所有敌人，每秒恢复最大生命的<@ba.vup>{HP_RECOVERY_PER_SEC_BY_MAX_HP_RATIO:0.0%}</>";
+        String str = "下次攻击时造成<@ba.vup>{atk_scale:0%}</>攻击力的物理伤害，若为远程攻击则溅射范围<@ba.vup>扩大</>且在周围产生一个持续<@ba.vup>{projectile_delay_time}</>秒的照明区域使敌人<$ba.invisible>隐匿</>失效\\\\n<@ba.rem>可充能{cnt}次</>";
         // 处理字符串中的无用字符
         // 去除回车符
         str = replaceEnter(str);
@@ -481,6 +479,8 @@ public class BotApplicationTests {
         String regex = "(\\{)|(\\}|(\\|)|(:))";
         result = result.replaceAll(regex, "");
         log.info("首次替换后:{}", result);
+        String regexP = "(<\\$ba\\.[a-z]{1,9}>)|(<@ba\\.[a-z]{1,9}>)|(<\\$ba\\.[a-z]{1,9}\\.[a-z]{1,9}>)";
+        result = result.replaceAll(regexP, "");
         // 这里不能用replaceAll，因为用了的话不添加转义字符会无法识别替换，而且每个变量只出现一次，用replace即可
         result = result.replace("atk", "0.4");
         result = result.replace("ep_heal_ratio", "0.6");
@@ -500,8 +500,7 @@ public class BotApplicationTests {
         result = result.replaceAll(regexPercent, String.valueOf((long)v)+"%");
         // result = result.replace("heal_scale", "0.6");
         // <$ba.dt.element>
-        String regexP = "(<\\$ba\\.[a-z]{1,9}>)|(<@ba\\.[a-z]{1,9}>)|(<\\$ba\\.[a-z]{1,9}\\.[a-z]{1,9}>)";
-        result = result.replaceAll(regexP, "");
+
         log.info("处理小数点和百分号前:{}", result);
         // 更改格式
 /*        String regexInt = "(0%)";
@@ -601,13 +600,24 @@ public class BotApplicationTests {
         long ss = (long) temp;
         log.info("输出：{}", ss);
 
-        String mappingCode = "";
-        String skillId = "skchr_frostl_2";
-        String[] perm = skillId.split("_");
-        if(perm.length>=2){
-            mappingCode = perm[0] + perm[1];
-            System.out.println(mappingCode);
-        }
+
+        List<String> listTest = Arrays.asList("111", "2", "3333", "44") ;
+        listTest.sort((o1, o2) -> {
+            if(o1.length() > o2.length()){
+
+                //这里注意，比较o1与o2的大小，若o1 大于 o2 默认会返回 1
+                //但是sort排序，默认的是升序排序，所以重写的时候将值改写返回-1，就会变成倒叙排序
+
+                return -1;
+            }else if(o1.length() == o2.length()){
+                return 0;
+            }else {
+                return 1;
+            }
+        });
+        System.out.println(listTest);
+
+
 
     }
 
