@@ -33,8 +33,7 @@ import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.arknights.bot.domain.entity.ClassificationEnum.GaCha;
-import static com.arknights.bot.domain.entity.ClassificationEnum.TokenInsert;
+import static com.arknights.bot.domain.entity.ClassificationEnum.*;
 import static com.arknights.bot.infra.util.DesUtil.*;
 import static com.arknights.bot.infra.util.TextToImageUtil.replaceEnter;
 
@@ -91,7 +90,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             if (text.startsWith(Constance.START_MARK)) {
                 //判断回复效率，以防和其他机器人互动死锁
                 if (getMsgLimit(currentAccount, groupId, name)) {
-                    // 取 ##后的内容
+                    // 取 #后的内容
                     String messages = text.substring(1);
                     log.info("message内容{}", messages);
                     // 调用菜单关键词匹配方法
@@ -123,6 +122,18 @@ public class GroupsChatServiceImpl implements GroupsChatService {
 
         ClassificationEnum c = ClassificationUtil.GetClass(text);
 
+        // 技能查询操作
+        if(text.startsWith(Constance.SKILL_QUERY)){
+            c = SkillQuery;
+            String[] split = text.split(Constance.START_MARK);
+            if(split.length == 2){
+                result = split[1];
+            }else {
+                log.info("获取干员名异常，正确格式为 #技能查询#艾雅法拉");
+                result =  "获取干员技能异常，正确格式为 #技能查询#艾雅法拉";
+                resultType = Constance.TYPE_JUST_TEXT;
+            }
+        }
         // token特殊操作
         if(text.startsWith(Constance.TOKEN_INSERT)){
             c = TokenInsert;
@@ -130,7 +141,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         }
         switch (c) {
             case CaiDan:
-                result = "这里是W测试版初号机1.0\n" +
+                result = "这里是W测试版初号机1.1\n" +
                         "0.获取token方法：#token获取教程\n" +
                         "1.token录入方法：#token录入{你的token}，例如 #token录入a7JD8jDdi9spp\n" +
                         "2.寻访记录：#寻访记录\n";
@@ -186,8 +197,14 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 result = "群主速速发红包";
                 resultType = Constance.TYPE_JUST_TEXT;
                 break;
+            case SkillQuery:
+                attachContent = Constance.SKILL_QUERY;
+                resultType = Constance.TYPE_JUST_IMG;
+                break;
             default:
-                result = "暂无对应查询，开发中";
+                if(StringUtils.isBlank(result)) {
+                    result = "暂无对应查询，开发中";
+                }
                 resultType = Constance.TYPE_JUST_TEXT;
         }
 
@@ -202,9 +219,11 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             if (Constance.TYPE_JUST_IMG.equals(resultType)) {
                 if(Constance.GACHA_LOGO.equals(attachContent)) {
                     // 取img后的内容
-                    imageUrl = getImageUrl(result);
+                    imageUrl = getGaChaImageUrl(result);
                 } else if (Constance.TOKEN_DEMO.equals(attachContent)){
                     imageUrl = result;
+                } else if(Constance.SKILL_QUERY.equals(attachContent)){
+                    imageUrl = getSkillInfoImageUrl(result);
                 }
                 if (StringUtils.isNotBlank(imageUrl)) {
                     log.info("获取imageUrl成功");
@@ -402,7 +421,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
     }
 
 
-    public String getImageUrl(String result){
+    public String getGaChaImageUrl(String result){
         Long processId = Long.valueOf(result);
         log.info("processId批次号为:{}", processId);
         result = "";
@@ -416,6 +435,26 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 result =  CallOPQApiSendImgMsg(gaChaInfoList);
             } catch (Exception e){
                e.printStackTrace();
+            }
+            return result;
+        }
+        return "";
+    }
+
+    public String getSkillInfoImageUrl(String result){
+        Long processId = Long.valueOf(result);
+        log.info("processId批次号为:{}", processId);
+        result = "";
+        if (Objects.nonNull(processId)) {
+            List<GaChaInfo> gaChaInfoList = gaChaInfoMapper.selectGaChaByProcessId(processId);
+            if (CollectionUtils.isEmpty(gaChaInfoList)) {
+                return null;
+            }
+            try {
+                // 生成image转url
+                result =  CallOPQApiSendImgMsg(gaChaInfoList);
+            } catch (Exception e){
+                e.printStackTrace();
             }
             return result;
         }

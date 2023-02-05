@@ -35,6 +35,8 @@ public interface Constance {
 
     String GACHA_LOGO = "gacha";
 
+    String SKILL_QUERY = "技能查询";
+
     /**
      * 技能相关
      */

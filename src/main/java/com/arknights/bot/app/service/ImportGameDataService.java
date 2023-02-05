@@ -3,6 +3,7 @@ package com.arknights.bot.app.service;
 import com.arknights.bot.domain.entity.GroupsEventInfo;
 import com.arknights.bot.domain.entity.OperatorBaseInfo;
 import com.arknights.bot.domain.entity.SkillLevelInfo;
+import com.arknights.bot.domain.entity.SkillMappingInfo;
 
 import java.util.List;
 
@@ -34,7 +35,7 @@ public interface ImportGameDataService {
      * 插入干员数据
      * @param operatorBaseInfoList
      */
-    void insertOperatorInfo(List<OperatorBaseInfo> operatorBaseInfoList, List<SkillLevelInfo> skillLevelInfoList);
+    void insertOperatorInfo(List<OperatorBaseInfo> operatorBaseInfoList, List<SkillMappingInfo> skillLevelInfoList);
 
     /**
      * 处理技能字符串

@@ -66,8 +66,7 @@
 
     <update id="updateSkillInfoById" parameterType="com.arknights.bot.domain.entity.SkillLevelInfo">
         update skill_info
-        set
-            skill_name    = #{skillName},
+        set skill_name    = #{skillName},
             power_type    = #{powerType},
             trigger_type  = #{triggerType},
             skill_LEVEL   = #{skillLevel},
@@ -86,14 +85,30 @@
     <update id="cleanOperatorInfo">
         truncate table operator_base_info;
     </update>
+    <update id="cleanSkillMappingInfo">
+        truncate table skill_mapping;
+    </update>
     <update id="cleanSkillInfo">
         truncate table skill_info;
     </update>
 
     <update id="updateErrorInfoById">
         update skill_info
-        set
-            attribute1 = #{attribute1}
-        where  id = #{id}
+        set attribute1 = #{attribute1}
+        where id = #{id}
     </update>
+
+    <insert id="insertSkillMappingInfo" parameterType="com.arknights.bot.domain.entity.SkillMappingInfo">
+        INSERT INTO skill_info (skill_code,
+                                key_code,
+                                open_level,
+                                skill_order)
+        VALUES (#{skillCode},
+                #{keyCode},
+               #{openLevel},
+               #{skillOrder})
+    </insert>
+
+    <select id="selectSkillMappingInfoByCode" resultType="com.arknights.bot.domain.entity.SkillMappingInfo">
+    </select>
 </mapper>

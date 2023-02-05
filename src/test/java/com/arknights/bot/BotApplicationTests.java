@@ -444,7 +444,7 @@ public class BotApplicationTests {
     public void saad() {
 
         // 攻击力<@ba.vup>+{atk:0%}</>，防御力<@ba.vup>+{def:0%}</>，每次攻击额外造成相当于攻击力<@ba.vup>{attack@blemsh_s_3_extra_dmg[magic].atk_scale:0%}</>的法术伤害，并恢复周围一名<@ba.rem>其他</>友方单位相当于攻击力<@ba.vup>{heal_scale:0%}</>的生命
-        String str = "下次攻击时造成<@ba.vup>{atk_scale:0%}</>攻击力的物理伤害，若为远程攻击则溅射范围<@ba.vup>扩大</>且在周围产生一个持续<@ba.vup>{projectile_delay_time}</>秒的照明区域使敌人<$ba.invisible>隐匿</>失效\\\\n<@ba.rem>可充能{cnt}次</>";
+        String str = "攻击力<@ba.vup>+{atk:0%}</>，天赋的触发几率提升至<@ba.vup>{talent_scale:0.0}</>倍";
         // 处理字符串中的无用字符
         // 去除回车符
         str = replaceEnter(str);
@@ -474,8 +474,10 @@ public class BotApplicationTests {
 
         log.info("看这次替换后:{}", result);
         // 有特殊情况会出现xxx:0.0%，需要替换为xx0%
-        String regexSpec = ":0\\.0%";
+        String regexSpec = "(:0\\.0%)";
         result = result.replaceAll(regexSpec, "0%");
+        String regexTimes = "(:0\\.0})";
+        result = result.replaceAll(regexTimes, "");
         String regex = "(\\{)|(\\}|(\\|)|(:))";
         result = result.replaceAll(regex, "");
         log.info("首次替换后:{}", result);
@@ -485,12 +487,12 @@ public class BotApplicationTests {
         result = result.replace("atk", "0.4");
         result = result.replace("ep_heal_ratio", "0.6");
         result = result.replace("cnt", "1.0");
-        result = result.replace("duration", "5.0");
+        result = result.replace("talent_scale", "3.0");
         result = result.replace("hp_recovery_per_sec_by_max_hp_ratio", "0.03");
         result = result.replace("hp_recovery_per_sec_by_max_hp_ratio".toUpperCase(), "0.03");
 
         log.info("当前:{}", result);
-        String value = "0.03";
+        String value = "3.0";
         float v = Float.parseFloat(value);
         v = v*100;
 

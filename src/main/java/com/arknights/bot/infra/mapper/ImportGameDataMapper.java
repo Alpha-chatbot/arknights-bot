@@ -3,6 +3,7 @@ package com.arknights.bot.infra.mapper;
 import com.arknights.bot.domain.entity.AccountInfo;
 import com.arknights.bot.domain.entity.OperatorBaseInfo;
 import com.arknights.bot.domain.entity.SkillLevelInfo;
+import com.arknights.bot.domain.entity.SkillMappingInfo;
 
 import java.util.List;
 
@@ -33,6 +34,13 @@ public interface ImportGameDataMapper {
     Integer insertSkillInfo(SkillLevelInfo skillLevelInfo);
 
     /**
+     * 插入干员技能映射信息
+     * @param skillMappingInfo
+     * @return
+     */
+    Integer insertSkillMappingInfo(SkillMappingInfo skillMappingInfo);
+
+    /**
      * 查询技能信息
      * @param skillCode
      * @return
@@ -56,5 +64,12 @@ public interface ImportGameDataMapper {
      */
     void cleanOperatorInfo();
 
+    /**
+     * 清理技能映射数据
+     */
+    void cleanSkillMappingInfo();
+
     int updateErrorInfoById(SkillLevelInfo skillLevelInfo);
+
+    List<SkillMappingInfo> selectSkillMappingInfoByCode(String skillCode);
 }
