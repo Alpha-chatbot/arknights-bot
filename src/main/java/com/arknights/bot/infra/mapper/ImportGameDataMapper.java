@@ -45,4 +45,16 @@ public interface ImportGameDataMapper {
      * @return
      */
     int updateSkillInfoById(SkillLevelInfo skillLevelInfo);
+
+    /**
+     * 清理技能数据
+     */
+    void cleanSkillInfo();
+
+    /**
+     * 清理干员数据方便更新
+     */
+    void cleanOperatorInfo();
+
+    int updateErrorInfoById(SkillLevelInfo skillLevelInfo);
 }

@@ -20,11 +20,13 @@ public class OperatorBaseInfo {
     @ApiModelProperty(value = "主键id")
     private Long id;
     @ApiModelProperty(value = "json key")
-    private String key;
+    private String keyCode;
     @ApiModelProperty(value = "干员中文名")
     private String zhName;
     @ApiModelProperty(value = "干员英文名")
     private String enName;
     @ApiModelProperty(value = "招聘合同")
     private String itemUsage;
+    @ApiModelProperty(value = "映射编码")
+    private String mappingCode;
 }

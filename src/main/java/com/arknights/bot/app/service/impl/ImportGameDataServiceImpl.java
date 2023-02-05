@@ -11,6 +11,7 @@ import com.arknights.bot.domain.entity.SkillLevelInfo;
 import com.arknights.bot.infra.constant.Constance;
 import com.arknights.bot.infra.mapper.ImportGameDataMapper;
 import com.arknights.bot.infra.util.RequestMsgUtil;
+import com.sun.org.apache.xalan.internal.xsltc.runtime.ErrorMessages_zh_CN;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +26,7 @@ import javax.annotation.Resource;
 import java.io.*;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -76,6 +78,8 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
     @Override
     public void operatorBaseInfoImport(String content) {
 
+        importGameDataMapper.cleanOperatorInfo();
+        importGameDataMapper.cleanSkillInfo();
         String uploadFileSavePath = "F:\\backup";
         // String uploadFileSavePath = FILE_PATH_PREFIX;
 
@@ -107,7 +111,7 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
                 continue;
             }
             OperatorBaseInfo operatorBaseInfo = new OperatorBaseInfo();
-            operatorBaseInfo.setKey(key);
+            operatorBaseInfo.setKeyCode(key);
             operatorBaseInfo.setEnName(enName);
             operatorBaseInfo.setZhName(zhName);
             operatorBaseInfo.setItemUsage(itemUsage);
@@ -115,9 +119,18 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
             // 获取技能id,先插表后通过skillId再去匹配skill_table
             JSONArray skillArr = valueObject.getJSONArray("skills");
             int order = 1;
+            String mappingCode = "";
             for (int j = 0; j < skillArr.size(); j++) {
                 com.alibaba.fastjson.JSONObject jsonObject = skillArr.getJSONObject(j);
                 String skillId = jsonObject.getString("skillId");
+                if(j==0){
+                    // 截取部分可作为技能表和干员表的关联字段(待测试)
+                    String[] perm = skillId.split("_");
+                    if(perm.length>=2){
+                        mappingCode = perm[0] + "_" + perm[1];
+                        operatorBaseInfo.setMappingCode(mappingCode);
+                    }
+                }
                 // 解锁条件
                 JSONObject unlockCond = jsonObject.getJSONObject("unlockCond");
                 // 0表示精英0开放
@@ -130,7 +143,7 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
                 skillLevelInfoList.add(skillLevelInfo);
                 order++;
             }
-            log.info("干员基本信息: key值:{},干员中文名:{}, 干员英文名:{}, 招聘合同:{}", key, zhName, enName, itemUsage);
+            log.info("干员基本信息: key值:{},干员中文名:{}, 干员英文名:{}, 招聘合同:{}, 映射code:{}", key, zhName, enName, itemUsage, mappingCode);
 
             operatorBaseInfoList.add(operatorBaseInfo);
         }
@@ -139,6 +152,7 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
         if (!CollectionUtils.isEmpty(operatorBaseInfoList) && !CollectionUtils.isEmpty(skillLevelInfoList)) {
             ImportGameDataService inf = (ImportGameDataService) AopContext.currentProxy();
             inf.insertOperatorInfo(operatorBaseInfoList, skillLevelInfoList);
+            log.info("数据插入完成~");
         } else {
             log.error("数据为空, 需要检查数据");
         }
@@ -151,6 +165,7 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
      */
     @Override
     public void skillInfoImport(String content) {
+
         String uploadFileSavePath = "F:\\backup";
         // String uploadFileSavePath = FILE_PATH_PREFIX;
 
@@ -182,9 +197,9 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
 
             // 获取技能详细信息，levels长度为10，对应10个技能等级（1-7，专1-3）
             JSONArray skillArr = valueObject.getJSONArray("levels");
+            String skillId = valueObject.getString("skillId");
             for (int j = 1; j <= skillArr.size(); j++) {
-                com.alibaba.fastjson.JSONObject jsonObject = skillArr.getJSONObject(j);
-                String skillId = jsonObject.getString("skillId");
+                com.alibaba.fastjson.JSONObject jsonObject = skillArr.getJSONObject(j-1);
                 // 技能名（中）
                 String skillName = jsonObject.getString("name");
                 // 技能描述
@@ -217,16 +232,17 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
                 }
                 // 技能持续时间
                 String duration = jsonObject.getString("duration");
-                if (Long.parseLong(duration) < 0) {
+                if (Float.parseFloat(duration) < 0) {
                     duration = "0";
                 }
                 // 技能描述中的变量k-v
-                JSONArray blackboard = valueObject.getJSONArray("blackboard");
+                JSONArray blackboard = jsonObject.getJSONArray("blackboard");
                 Map<String, String> descMap = new HashMap<>();
                 for (int k = 1; k <= blackboard.size(); k++) {
-                    com.alibaba.fastjson.JSONObject kvObject = skillArr.getJSONObject(j);
+                    com.alibaba.fastjson.JSONObject kvObject = blackboard.getJSONObject(k-1);
                     descMap.put(kvObject.getString("key"), kvObject.getString("value"));
                 }
+                log.info("打印map:{}", descMap);
                 try {
                     // 处理多余字符
                     description = handleDesc(description, descMap);
@@ -236,22 +252,14 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
 
                 log.info("技能信息: 技能id:{}, 技能描述:{}", skillId, description);
 
-                SkillLevelInfo skillInfo = new SkillLevelInfo();
-                skillInfo.setSkillName(skillName);
-                skillInfo.setDescription(description);
-                skillInfo.setTriggerType(triggerType);
-                skillInfo.setPowerType(powerType);
-                skillInfo.setInitialValue(initialValue);
-                skillInfo.setConsumeValue(consumeValue);
-                skillInfo.setSpan(Long.valueOf(duration));
-                skillInfo.setSkillLevel((long) j);
-
-                skillInfo.setSkillOrder(skillOrder);
-                skillInfo.setOpenLevel(openLevel);
+                SkillLevelInfo skillInfo = SkillLevelInfo.builder().skillCode(skillCode).skillName(skillName).description(description).triggerType(triggerType)
+                        .powerType(powerType).initialValue(initialValue).consumeValue(consumeValue).span((long)Float.parseFloat(duration))
+                        .skillLevel((long) j).skillOrder(skillOrder).openLevel(openLevel).build();
                 // 对原数据进行更新，以及插入新数据
                 if (j == 1) {
                     skillInfo.setId(skillLevelInfo.getId());
                     skillUpdateList.add(skillInfo);
+                    log.info("此行准备更新,更新内容:{}", skillInfo);
                 } else {
                     skillInsertList.add(skillInfo);
                 }
@@ -260,7 +268,7 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
             ImportGameDataService inf = (ImportGameDataService) AopContext.currentProxy();
             // 更新
             if (!CollectionUtils.isEmpty(skillUpdateList)) {
-                inf.updateSkillInfo(skillUpdateList);
+                    inf.updateSkillInfo(skillUpdateList);
             } else {
                 log.error("数据为空, 需要检查数据");
             }
@@ -300,7 +308,12 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
     public void updateSkillInfo(List<SkillLevelInfo> skillLevelInfoList) {
         // 技能部分信息
         for (SkillLevelInfo skillLevelInfo : skillLevelInfoList) {
-            importGameDataMapper.updateSkillInfoById(skillLevelInfo);
+            try {
+                importGameDataMapper.updateSkillInfoById(skillLevelInfo);
+            } catch (Exception e){
+                skillLevelInfo.setAttribute1(e.getMessage().substring(0, 60));
+                importGameDataMapper.updateErrorInfoById(skillLevelInfo);
+            }
         }
     }
 
@@ -312,11 +325,13 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
      */
     public static String getStr(File jsonFile) {
         String jsonStr = "";
+        FileReader fileReader = null;
+        Reader reader = null;
         try {
-            FileReader fileReader = new FileReader(jsonFile);
-            Reader reader = new InputStreamReader(new FileInputStream(jsonFile), "utf-8");
+            fileReader = new FileReader(jsonFile);
+            reader = new InputStreamReader(new FileInputStream(jsonFile), StandardCharsets.UTF_8);
             int ch = 0;
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             while ((ch = reader.read()) != -1) {
                 sb.append((char) ch);
             }
@@ -324,9 +339,24 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
             reader.close();
             jsonStr = sb.toString();
             return jsonStr;
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
+        } finally {
+            if (fileReader != null) {
+                try {
+                    fileReader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -334,6 +364,12 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
         // 处理字符串中的无用字符
         // 去除回车符
         str = replaceEnter(str);
+        // 去除转义回车
+        String regexEnter = "\\\\n";
+        str = str.replaceAll(regexEnter, "");
+        // 去除右斜杠
+        String regexSlash = "\\\\";
+        str = str.replaceAll(regexSlash, ",");
         // 移除术语标识
         Pattern pattern1 = Pattern.compile("([\\+\\-\\*]\\{)[\\+\\-\\*]");
         Matcher matcher1 = pattern1.matcher(str);
@@ -343,44 +379,39 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
         }
         String result = matcher1.replaceAll("\\{");
 
-        Pattern pattern2 = Pattern.compile("(<@ba\\.vup>)");
+        Pattern pattern2 = Pattern.compile("(<\\/\\>)");
         Matcher matcher2 = pattern2.matcher(result);
         count = 0;
         while (matcher2.find()) {
             count++;
         }
-        result = matcher2.replaceAll("");
-
-        Pattern pattern3 = Pattern.compile("(<@ba\\.rem>)");
-        Matcher matcher3 = pattern3.matcher(result);
-        count = 0;
-        while (matcher3.find()) {
-            count++;
-        }
-        result = matcher3.replaceAll("");
-
-        Pattern pattern4 = Pattern.compile("(<\\/\\>)");
-        Matcher matcher4 = pattern4.matcher(result);
-        count = 0;
-        while (matcher4.find()) {
-            count++;
-        }
         // 统一替换
-        result = matcher4.replaceAll("");
+        result = matcher2.replaceAll("");
 
         String regex = "(\\{)|(\\}|(\\|)|(:))";
         result = result.replaceAll(regex, "");
-        log.info("首次替换后:{}", result);
-        // 技能数据变量赋值
+        // 这里不能用replaceAll，因为用了的话不添加转义字符会无法识别替换，而且每个变量只出现一次，用replace即可
         for (Map.Entry<String, String> map : descMap.entrySet()) {
             String regexTemp = map.getKey();
-            result = result.replaceAll(regexTemp, map.getValue());
+            String value = map.getValue();
+            result = result.replace(regexTemp, value);
+            // 默认为小写,但是测试时发现有的description中 key是大写变量，所以还得考虑大小写
+            regexTemp = regexTemp.toUpperCase();
+            result = result.replace(regexTemp, value);
+
+            float v = Float.parseFloat(value);
+            v = v*100;
+            // 在这里处理百分号转换问题，比如现在格式是 攻击力+0.40% ,替换为 40%
+            String regexPercent = "[0-9][.][0-9]0%";
+            result = result.replaceAll(regexPercent, String.valueOf((long)v)+"%");
         }
-        // 变为整型格式
-        String regexInt = "(\\.0)|(\\.)";
-        result = result.replaceAll(regexInt, "");
-        log.info("二次替换后:{}", result);
+        String regexP = "(<\\$ba\\.[a-z]{1,8}>)|(<@ba\\.[a-z]{1,8}>)|(<\\$ba\\.[a-z]{1,9}\\.[a-z]{1,9}>)";
+        result = result.replaceAll(regexP, "");
+        log.info("最终替换后:{}", result);
         return result;
+
+
+
     }
 
     @Override

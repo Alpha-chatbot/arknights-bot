@@ -443,13 +443,17 @@ public class BotApplicationTests {
     @Test
     public void saad() {
 
-        String str = "下次攻击造成相当于攻击力<@ba.vup>{atk_scale:0%}</>的法术伤害，命中目标在<@ba.vup>3</>秒内防御力<@ba.vup>-{-def}</>并持续受到灼烧伤害\\\n<@ba.rem>可充能{ct}次</>";
-        String def = "-100.0";
-        String atk_scale = "1.3";
-        String ct = "2.0";
+        // 攻击力<@ba.vup>+{atk:0%}</>，防御力<@ba.vup>+{def:0%}</>，每次攻击额外造成相当于攻击力<@ba.vup>{attack@blemsh_s_3_extra_dmg[magic].atk_scale:0%}</>的法术伤害，并恢复周围一名<@ba.rem>其他</>友方单位相当于攻击力<@ba.vup>{heal_scale:0%}</>的生命
+        String str = "<@ba.rem>可以在下列状态和初始状态间切换：</>\\\\n防御力<@ba.vdown>-{-def:0%}</>，攻击距离<@ba.vdown>缩短</>，攻击力<@ba.vup>+{atk:0%}</>，阻挡数<@ba.vup>+{block_cnt}</>，同时攻击阻挡的所有敌人，每秒恢复最大生命的<@ba.vup>{HP_RECOVERY_PER_SEC_BY_MAX_HP_RATIO:0.0%}</>";
         // 处理字符串中的无用字符
         // 去除回车符
         str = replaceEnter(str);
+        // 去除转义回车
+        String regexEnter = "\\\\n";
+        str = str.replaceAll(regexEnter, "");
+        // 去除右斜杠
+        String regexSlash = "\\\\";
+        str = str.replaceAll(regexSlash, ",");
         // 移除术语标识
         Pattern pattern1 = Pattern.compile("([\\+\\-\\*]\\{)[\\+\\-\\*]");
         Matcher matcher1 = pattern1.matcher(str);
@@ -459,41 +463,41 @@ public class BotApplicationTests {
         }
         String result = matcher1.replaceAll("\\{");
 
-        Pattern pattern2 = Pattern.compile("(<@ba\\.vup>)");
+        Pattern pattern2 = Pattern.compile("(<\\/\\>)");
         Matcher matcher2 = pattern2.matcher(result);
         count = 0;
         while (matcher2.find()) {
             count++;
         }
-        result = matcher2.replaceAll("");
-
-        Pattern pattern3 = Pattern.compile("(<@ba\\.rem>)");
-        Matcher matcher3 = pattern3.matcher(result);
-        count = 0;
-        while (matcher3.find()) {
-            count++;
-        }
-        result = matcher3.replaceAll("");
-
-        Pattern pattern4 = Pattern.compile("(<\\/\\>)");
-        Matcher matcher4 = pattern4.matcher(result);
-        count = 0;
-        while (matcher4.find()) {
-            count++;
-        }
         // 统一替换
-        result = matcher4.replaceAll("");
+        result = matcher2.replaceAll("");
 
         String regex = "(\\{)|(\\}|(\\|)|(:))";
         result = result.replaceAll(regex, "");
         log.info("首次替换后:{}", result);
-        result = result.replaceAll("def", "-100.0");
-        result = result.replaceAll("atk_scale", "1.3");
-        result = result.replaceAll("ct", "2.0");
-        // 变为整型格式
-        String regexInt = "(\\.0)|(\\.)";
+        // 这里不能用replaceAll，因为用了的话不添加转义字符会无法识别替换，而且每个变量只出现一次，用replace即可
+        result = result.replace("atk", "0.4");
+        result = result.replace("ep_heal_ratio", "0.6");
+        result = result.replace("cnt", "1.0");
+        result = result.replace("duration", "5.0");
+        result = result.replace("hp_recovery_per_sec_by_max_hp_ratio", "0.03");
+        String value = "0.4";
+        float v = Float.parseFloat(value);
+        v = v*100;
+
+        log.info("当前v:{}", (long)v);
+        // 在这里处理百分号转换问题，比如现在格式是 攻击力+0.40% ,替换为 40%
+        String regexPercent = "[0-9][.][0-9]0%";
+        result = result.replaceAll(regexPercent, String.valueOf((long)v)+"%");
+        // result = result.replace("heal_scale", "0.6");
+        // <$ba.dt.element>
+        String regexP = "(<\\$ba\\.[a-z]{1,9}>)|(<@ba\\.[a-z]{1,9}>)|(<\\$ba\\.[a-z]{1,9}\\.[a-z]{1,9}>)";
+        result = result.replaceAll(regexP, "");
+        log.info("处理小数点和百分号前:{}", result);
+        // 更改格式
+/*        String regexInt = "(0%)";
         result = result.replaceAll(regexInt, "");
-        log.info("二次替换后:{}", result);
+        log.info("三次替换后:{}", result);*/
     }
 
     //把一个文件中的内容读取成一个String字符串
@@ -576,46 +580,25 @@ public class BotApplicationTests {
     }
 
     @Test
-    public void zzttt(){
-        String uploadFileSavePath = "F:\\backup";
-        // String uploadFileSavePath = FILE_PATH_PREFIX;
-        // character_table.json  skill_table.json
-
-        // 下载文件进行解析
-        // File downloadFile = new File(uploadFileSavePath + File.separator + "character_table.json");
-        File jsonFile = new File(uploadFileSavePath + File.separator + "skill_table.json");
-        //通过上面那个方法获取json文件的内容
-        String jsonData = getStr(jsonFile);
-        //转json对象
-        JSONObject parse = (JSONObject)JSONObject.parse(jsonData);
-        //获取主要数据
-        //遍历key和value
-        int i = 0;
-        for (Map.Entry<String, Object> entry : parse.entrySet()) {
-            String key = entry.getKey();
-            String[] strs = key.split("_");
-            log.info("拆分后段数应>=3,当前段数为" + strs.length);
-            // 映射code
-            String mappingCode = strs[2];
-            JSONObject valueObject =(JSONObject)entry.getValue();
-            // 干员中文名称
-            String zh_name = valueObject.getString("name");
-            // 干员英文名
-            String en_name = valueObject.getString("appellation");
-            // 转为小写方便匹配其余json信息
-            en_name = en_name.toLowerCase();
-            // 招聘合同
-            String itemUsage = valueObject.getString("itemUsage");
-            // 潜能物id，这里用于排除道具类的数据
-            String potentialItemId = valueObject.getString("potentialItemId");
-            if(StringUtils.isBlank(potentialItemId)){
-                continue;
-            }
-            i++;
-            log.info("干员基本信息: key值:{}, 映射code：{},干员中文名:{}, 干员英文名:{}, 招聘合同:{}", key, mappingCode, zh_name, en_name, itemUsage);
-            // 吐槽:为什么道具也会放在人物表里...
+    public void parseTest(){
+        String duration = "-1.0";
+        float l = Float.parseFloat(duration);
+        if (l < 0) {
+            duration = "0";
         }
-        log.info("当前干员总数:{}", i);
+        log.info("输出:{}", duration);
+        duration = "20.0";
+        float temp = Float.parseFloat(duration);
+        long ss = (long) temp;
+        log.info("输出：{}", ss);
+
+        String mappingCode = "";
+        String skillId = "skchr_frostl_2";
+        String[] perm = skillId.split("_");
+        if(perm.length>=2){
+            mappingCode = perm[0] + perm[1];
+            System.out.println(mappingCode);
+        }
 
     }
 

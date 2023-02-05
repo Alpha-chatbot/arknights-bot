@@ -1,13 +1,19 @@
 package com.arknights.bot.domain.entity;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 干员技能信息
  * Created by wangzhen on 2023/1/30 11:21
  * @author 14869
  */
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 public class SkillLevelInfo {
 

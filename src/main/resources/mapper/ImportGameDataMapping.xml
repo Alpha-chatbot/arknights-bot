@@ -16,69 +16,84 @@
 
 
     <insert id="insertOperatorBaseInfo" parameterType="com.arknights.bot.domain.entity.OperatorBaseInfo">
-        INSERT INTO operator_base_info (operator_id,
-                                        name)
-        VALUES (#{operatorId},
-                #{name}) on DUPLICATE KEY
+        INSERT INTO operator_base_info (key_code, en_name, zh_name, item_usage, mapping_code)
+        VALUES (#{keyCode},
+                #{enName},
+                #{zhName},
+                #{itemUsage},
+                #{mappingCode}) on DUPLICATE KEY
         UPDATE
-            operator_id = #{operatorId}
+            item_usage = #{itemUsage},
+            en_name = #{enName},
+            zh_name = #{zhName},
+            mapping_code = #{mappingCode}
     </insert>
 
     <insert id="insertSkillInfo" parameterType="com.arknights.bot.domain.entity.SkillLevelInfo">
-        INSERT INTO skill_info  (
-	skill_code,
-    skill_name,
-	power_type,
-	trigger_type,
-	skill_LEVEL,
-	description,
-	initial_value,
-	consume_value,
-	span,
-	remarks,
-	open_level,
-	skill_order,
-	attribute1
-        )
-        VALUES (
-            #{skillCode},
-            #{skillName},
-            #{powerType},
-            #{triggerType},
-            #{skillLevel},
-            #{description},
-            #{initialValue},
-            #{consumeValue},
-            #{span},
-            #{remarks},
-            #{openLevel},
-            #{skillOrder},
-            #{attribute1}
-            )
+        INSERT INTO skill_info (skill_code,
+                                skill_name,
+                                power_type,
+                                trigger_type,
+                                skill_LEVEL,
+                                description,
+                                initial_value,
+                                consume_value,
+                                span,
+                                remarks,
+                                open_level,
+                                skill_order,
+                                attribute1)
+        VALUES (#{skillCode},
+                #{skillName},
+                #{powerType},
+                #{triggerType},
+                #{skillLevel},
+                #{description},
+                #{initialValue},
+                #{consumeValue},
+                #{span},
+                #{remarks},
+                #{openLevel},
+                #{skillOrder},
+                #{attribute1})
     </insert>
 
     <select id="selectSkillInfoByCode" resultType="com.arknights.bot.domain.entity.SkillLevelInfo">
-        select * from skill_info
+        select *
+        from skill_info
         where skill_code = #{skillCode}
     </select>
 
     <update id="updateSkillInfoById" parameterType="com.arknights.bot.domain.entity.SkillLevelInfo">
-        update  skill_info
+        update skill_info
         set
-            skill_code = #{skillCode},
-            skill_name = #{skillName},
-            power_type = #{powerType},
-            trigger_type = #{triggerType},
-            skill_LEVEL = #{skillLevel},
-            description = #{description},
+            skill_name    = #{skillName},
+            power_type    = #{powerType},
+            trigger_type  = #{triggerType},
+            skill_LEVEL   = #{skillLevel},
+            description   = #{description},
             initial_value = #{initialValue},
             consume_value = #{consumeValue},
-            span = #{span},
-            remarks = #{remarks},
-            open_level = #{openLevel},
-            skill_order = #{skillOrder},
-            attribute1 = #{attribute1}
+            span          = #{span},
+            remarks       = #{remarks},
+            open_level    = #{openLevel},
+            skill_order   = #{skillOrder},
+            attribute1    = #{attribute1}
 
-        where id=#{id}
+        where id = #{id}
+    </update>
+
+    <update id="cleanOperatorInfo">
+        truncate table operator_base_info;
+    </update>
+    <update id="cleanSkillInfo">
+        truncate table skill_info;
+    </update>
+
+    <update id="updateErrorInfoById">
+        update skill_info
+        set
+            attribute1 = #{attribute1}
+        where  id = #{id}
     </update>
 </mapper>
