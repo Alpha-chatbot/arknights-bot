@@ -387,6 +387,9 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
         }
         // 统一替换
         result = matcher2.replaceAll("");
+        // 有特殊情况会出现xxx:0.0%，需要替换为xx0%
+        String regexSpec = ":0\\.0%";
+        result = result.replaceAll(regexSpec, "0%");
 
         String regex = "(\\{)|(\\}|(\\|)|(:))";
         result = result.replaceAll(regex, "");
@@ -401,8 +404,8 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
 
             float v = Float.parseFloat(value);
             v = v*100;
-            // 在这里处理百分号转换问题，比如现在格式是 攻击力+0.40% ,替换为 40%
-            String regexPercent = "[0-9][.][0-9]0%";
+            // 在这里处理百分号转换问题，比如现在格式是 攻击力+0.40% ,替换为 40%，也可能有0.03，即类似生命百分比的小数值
+            String regexPercent = "[0-9][.][0-9]{1,2}0%";
             result = result.replaceAll(regexPercent, String.valueOf((long)v)+"%");
         }
         String regexP = "(<\\$ba\\.[a-z]{1,8}>)|(<@ba\\.[a-z]{1,8}>)|(<\\$ba\\.[a-z]{1,9}\\.[a-z]{1,9}>)";
