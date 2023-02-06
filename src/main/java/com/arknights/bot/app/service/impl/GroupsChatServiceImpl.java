@@ -98,7 +98,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 }
             }
             // 艾特行为
-            if(text.contains(Constance.AT_LOGO)){
+            if (text.contains(Constance.AT_LOGO)) {
                 // 自动回复表情包
                 autoEventForAt(groupId, currentAccount);
             }
@@ -108,6 +108,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
 
     /**
      * 匹配关键字并进行回复
+     *
      * @param qq
      * @param groupId
      * @param name
@@ -123,19 +124,19 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         ClassificationEnum c = ClassificationUtil.GetClass(text);
 
         // 技能查询操作
-        if(text.startsWith(Constance.SKILL_QUERY)){
+        if (text.startsWith(Constance.SKILL_QUERY)) {
             c = SkillQuery;
             String[] split = text.split(Constance.START_MARK);
-            if(split.length == 2){
+            if (split.length == 2) {
                 result = split[1];
-            }else {
+            } else {
                 log.info("获取干员名异常，正确格式为 #技能查询#艾雅法拉");
-                result =  "获取干员技能异常，正确格式为 #技能查询#艾雅法拉";
+                result = "获取干员技能异常，正确格式为 #技能查询#艾雅法拉";
                 resultType = Constance.TYPE_JUST_TEXT;
             }
         }
         // token特殊操作
-        if(text.startsWith(Constance.TOKEN_INSERT)){
+        if (text.startsWith(Constance.TOKEN_INSERT)) {
             c = TokenInsert;
             text = text.substring(Constance.TOKEN_INSERT.length());
         }
@@ -159,14 +160,14 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                     resultType = Constance.TYPE_JUST_IMG;
                     attachContent = Constance.TOKEN_DEMO;
                     break;
-                }catch (Exception e){
+                } catch (Exception e) {
                     log.info("获取demo图片异常{}", e);
-                    result =  "...获取教程异常，请稍后再试";
+                    result = "...获取教程异常，请稍后再试";
                     resultType = Constance.TYPE_JUST_TEXT;
                 }
                 break;
             case TokenInsert:
-                if(StringUtils.isEmpty(text)){
+                if (StringUtils.isEmpty(text)) {
                     result = "token不能为空，输入格式为 #token录入xxxxx，xxxxx为你的token";
                     break;
                 }
@@ -180,9 +181,9 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 // 寻访记录获取
                 // 获取解密后的token
                 String token = getToken(qq);
-                if(StringUtils.isNotBlank(token)){
+                if (StringUtils.isNotBlank(token)) {
                     String info = gaChaInfoService.gaChaQueryByPage(1, token, qq);
-                    if(StringUtils.isEmpty(info)){
+                    if (StringUtils.isEmpty(info)) {
                         result = "当前token无法获取官网信息，请尝试录入新token";
                     } else {
                         result = info;
@@ -199,14 +200,14 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 resultType = Constance.TYPE_JUST_TEXT;
                 break;
             case SkillQuery:
-                if(!StringUtils.isBlank(result)) {
+                if (!StringUtils.isBlank(result)) {
                     // result内容为干员名
                     attachContent = Constance.SKILL_QUERY;
                     resultType = Constance.TYPE_JUST_IMG;
                 }
                 break;
             default:
-                if(StringUtils.isBlank(result)) {
+                if (StringUtils.isBlank(result)) {
                     result = "暂无对应查询，开发中";
                 }
                 resultType = Constance.TYPE_JUST_TEXT;
@@ -221,12 +222,12 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             log.info("打印result信息:{}", result);
             // 图像消息
             if (Constance.TYPE_JUST_IMG.equals(resultType)) {
-                if(Constance.GACHA_LOGO.equals(attachContent)) {
+                if (Constance.GACHA_LOGO.equals(attachContent)) {
                     // 取img后的内容
                     imageUrl = getGaChaImageUrl(result);
-                } else if (Constance.TOKEN_DEMO.equals(attachContent)){
+                } else if (Constance.TOKEN_DEMO.equals(attachContent)) {
                     imageUrl = result;
-                } else if(Constance.SKILL_QUERY.equals(attachContent)){
+                } else if (Constance.SKILL_QUERY.equals(attachContent)) {
                     imageUrl = getSkillInfoImageUrl(result);
                 }
                 if (StringUtils.isNotBlank(imageUrl)) {
@@ -236,10 +237,10 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 } else {
                     sendMsgUtil.CallOPQApiSendMsg(groupId, "图像生成失败", 2);
                 }
-            } else if(Constance.TYPE_JUST_TEXT.equals(resultType)){
+            } else if (Constance.TYPE_JUST_TEXT.equals(resultType)) {
                 // 纯文字消息
                 sendMsgUtil.CallOPQApiSendMsg(groupId, result, 2);
-            } else if (StringUtils.isNotBlank(attachContent)){
+            } else if (StringUtils.isNotBlank(attachContent)) {
                 // 文字+图片消息,attachContent为文字等内容
             }
 
@@ -314,7 +315,8 @@ public class GroupsChatServiceImpl implements GroupsChatService {
     }
 
     /**
-     *  json串处理
+     * json串处理
+     *
      * @param text
      * @param groupId
      * @return
@@ -330,7 +332,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             //在json结构前添加关键字信息， 使用波浪线分隔，可以将图片内容和文字内容统一进行处理。
             text = keyword + "\001" + text;
         } else if (text.startsWith("{\"FileID")) {
-        // 文件类型
+            // 文件类型
         } else if (text.startsWith("{\"GroupPic")) {
             //纯图片消息，只判断第一张
             JSONObject jsonObj = new JSONObject(text).getJSONArray("GroupPic").getJSONObject(0);
@@ -387,31 +389,32 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         accountInfo.setToken(token);
         accountInfo.setQq(qq);
         Integer integer = groupChatMapper.insertAccountInfo(accountInfo);
-        return Objects.nonNull(integer)?"更新成功":"更新失败";
+        return Objects.nonNull(integer) ? "更新成功" : "更新失败";
     }
 
     /**
      * 根据qq查询对应token并解密返回
+     *
      * @param qq
      * @return
      */
-    public String getToken(Long qq){
+    public String getToken(Long qq) {
         String token = "";
         AccountInfo accountInfo = groupChatMapper.selectAccountInfo(qq);
-        if(Objects.isNull(accountInfo)){
+        if (Objects.isNull(accountInfo)) {
             return "";
         }
-        if(StringUtils.isNotBlank(accountInfo.getToken())){
+        if (StringUtils.isNotBlank(accountInfo.getToken())) {
             try {
                 token = getDecryptString(accountInfo.getToken());
-            }catch (Exception e){
+            } catch (Exception e) {
                 return "";
             }
         }
         return token;
     }
 
-    public void autoEventForAt(Long groupId, Long qq){
+    public void autoEventForAt(Long groupId, Long qq) {
         try {
             // resource获取图片,并InputStream转为BufferedImage,再转为url调用OPQ的api
             ClassPathResource resource = new ClassPathResource("pic/atPic.jpg");
@@ -419,13 +422,13 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             BufferedImage image = ImageIO.read(inputStream);
             String base641 = replaceEnter(new BASE64Encoder().encode(TextToImageUtil.imageToBytes(image)));
             sendMsgUtil.CallOPQApiSendImg(groupId, "", SendMsgUtil.picBase64Buf, base641, 2);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
 
-    public String getGaChaImageUrl(String result){
+    public String getGaChaImageUrl(String result) {
         Long processId = Long.valueOf(result);
         log.info("processId批次号为:{}", processId);
         result = "";
@@ -436,16 +439,16 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             }
             try {
                 // 生成image转url
-                result =  CallOPQApiSendImgMsg(gaChaInfoList);
-            } catch (Exception e){
-               e.printStackTrace();
+                result = CallOPQApiSendImgMsg(gaChaInfoList);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
             return result;
         }
         return "";
     }
 
-    public String getSkillInfoImageUrl(String result){
+    public String getSkillInfoImageUrl(String result) {
         String name = result;
         log.info("当前查询干员为:{}", name);
         result = "";
@@ -456,8 +459,8 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             }
             try {
                 // 生成image转url
-                result =  CallOPQApiSendSkillImgMsg(skillLevelInfoList);
-            } catch (Exception e){
+                result = CallOPQApiSendSkillImgMsg(skillLevelInfoList);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             return result;
@@ -680,10 +683,11 @@ public class GroupsChatServiceImpl implements GroupsChatService {
 
     /**
      * 干员技能信息封装
+     *
      * @param skillLevelInfoList
      * @return
      */
-    public String CallOPQApiSendSkillImgMsg( List<SkillLevelInfo> skillLevelInfoList) {
+    public String CallOPQApiSendSkillImgMsg(List<SkillLevelInfo> skillLevelInfoList) {
 
         //保存结果
         int height = 0;
@@ -752,16 +756,16 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         List<SkillLevelInfo> skillThirdList = skillOrderListMap.get(3);
 
         // 按照技能升序排列
-        if(!CollectionUtils.isEmpty(skillFirstList)){
+        if (!CollectionUtils.isEmpty(skillFirstList)) {
             skillFirstList = skillFirstList.stream().sorted(Comparator.comparing(SkillLevelInfo::getSkillLevel)).collect(Collectors.toList());
             zhName = skillFirstList.get(0).getZhName();
             enName = skillFirstList.get(0).getEnName();
             itemUsage = skillFirstList.get(0).getItemUsage();
             openLevel = skillFirstList.get(0).getOpenLevel();
 
-            if(!CollectionUtils.isEmpty(skillSecondList)){
+            if (!CollectionUtils.isEmpty(skillSecondList)) {
                 skillSecondList = skillSecondList.stream().sorted(Comparator.comparing(SkillLevelInfo::getSkillLevel)).collect(Collectors.toList());
-                if(!CollectionUtils.isEmpty(skillThirdList)){
+                if (!CollectionUtils.isEmpty(skillThirdList)) {
                     skillThirdList = skillThirdList.stream().sorted(Comparator.comparing(SkillLevelInfo::getSkillLevel)).collect(Collectors.toList());
                 }
             }
@@ -790,16 +794,16 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         // 设置画笔字体
         g.setFont(font);
 
-        // 顶头
-     // 草绿色
-        // g.setColor(new Color(174, 213, 76));
         // 干员名称
         g.setColor(Color.BLACK);
-        g.drawString(enName, 0, 50);
+        g.drawString(enName, 0, 30);
         g.setFont(titleFont);
-        g.drawString(zhName, 0, 100);
+        g.drawString(zhName, 0, 90);
         // 黑色
         // 招聘合同词
+        g.setFont(font);
+        // 草绿色
+        g.setColor(new Color(174, 213, 76));
         g.drawString(itemUsage, 0, 170);
 
         // 技能
@@ -807,12 +811,11 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         g.drawString("技能", 0, 230);
         // 一技能
         g.setFont(h2Font);
-        // 铁青色
-        g.setColor(new Color(70, 130, 180));
-        g.drawString("一技能   " + openLevel, 0, 280);
+        // 猛男粉
+        g.setColor(new Color(255, 182, 193));
         powerType = skillFirstList.get(0).getPowerType();
         triggerType = skillFirstList.get(0).getTriggerType();
-        g.drawString(powerType + "\t" + triggerType + openLevel, 200, 280);
+        g.drawString("一技能: " + "精英" + openLevel + "开放." + "\t" + powerType + "\t" + triggerType, 0, 280);
         // 表格上下间距
         int cellHeight = 60;
         // 表格总宽
@@ -820,29 +823,31 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         int i = 6;
         g.setColor(Color.GRAY);
         int count = 0;
-        for(SkillLevelInfo firstSkill : skillFirstList){
-            g.setFont(font);
+        g.setColor(Color.BLACK);
+        g.setFont(font);
+        g.drawString("等级", 0, i * cellHeight);
+        g.drawString("描述", 100, i * cellHeight);
+        g.drawString("初始", 700, i * cellHeight);
+        g.drawString("消耗", 850, i * cellHeight);
+        g.drawString("持续", 900, i * cellHeight);
+        for (SkillLevelInfo firstSkill : skillFirstList) {
             // 绘制线段(单元格)
             // drawdrawLine(x1, y1, x2, y2) 分别代表第一个点的x,y 坐标和 第二个点的x, y坐标
-            g.drawLine(0, i*cellHeight, tableWeight, i*cellHeight);
-            g.setColor(Color.BLACK);
-            if(count==0){
-                g.drawString("等级", 0, i*cellHeight+2);
-                g.drawString("描述", 100, i*cellHeight+2);
-                g.drawString("初始", 700, i*cellHeight+2);
-                g.drawString("消耗", 750, i*cellHeight+2);
-                g.drawString("持续", 850, i*cellHeight+2);
-            }else {
-                g.drawString(firstSkill.getSkillLevel().toString() , 0, i*cellHeight+2);
-                g.drawString(firstSkill.getDescription() , 100, i*cellHeight+2);
-                g.drawString(firstSkill.getInitialValue().toString() , 700, i*cellHeight+2);
-                g.drawString(firstSkill.getConsumeValue().toString() , 750, i*cellHeight+2);
-                g.drawString(firstSkill.getSpan().toString() , 850, i*cellHeight+2);
-            }
-            i++;
-            count++;
-        }
+            g.drawLine(0, i * cellHeight, tableWeight, i * cellHeight+ 5);
 
+            g.drawString(firstSkill.getSkillLevel().toString(), 0, i * cellHeight + 10);
+            String desc = firstSkill.getDescription();
+            if(desc.length()>28) {
+                g.drawString(desc.substring(0, 28), 100, i * cellHeight + 10);
+                g.drawString(desc.substring(28), 100, i * cellHeight + 30);
+            } else {
+                g.drawString(desc, 100, i * cellHeight + 10);
+            }
+            g.drawString(firstSkill.getInitialValue().toString(), 700, i * cellHeight + 10);
+            g.drawString(firstSkill.getConsumeValue().toString(), 750, i * cellHeight + 10);
+            g.drawString(firstSkill.getSpan().toString(), 850, i * cellHeight + 10);
+            i++;
+        }
 
 
         g.dispose();
