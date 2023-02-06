@@ -11,8 +11,8 @@ import java.util.List;
 public interface SkillInfoMapper {
     /**
      * 查询技能信息
-     * @param skillCode
+     * @param name
      * @return
      */
-    List<SkillLevelInfo> selectSkillInfoByCode(String skillCode);
+    List<SkillLevelInfo> selectSkillInfoByName(String name);
 }

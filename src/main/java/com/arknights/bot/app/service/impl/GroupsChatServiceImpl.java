@@ -3,13 +3,11 @@ package com.arknights.bot.app.service.impl;
 
 import com.arknights.bot.app.service.GaChaInfoService;
 import com.arknights.bot.app.service.GroupsChatService;
-import com.arknights.bot.domain.entity.AccountInfo;
-import com.arknights.bot.domain.entity.ClassificationEnum;
-import com.arknights.bot.domain.entity.GaChaInfo;
-import com.arknights.bot.domain.entity.GroupsEventInfo;
+import com.arknights.bot.domain.entity.*;
 import com.arknights.bot.infra.constant.Constance;
 import com.arknights.bot.infra.mapper.GaChaInfoMapper;
 import com.arknights.bot.infra.mapper.GroupChatMapper;
+import com.arknights.bot.infra.mapper.SkillInfoMapper;
 import com.arknights.bot.infra.util.ClassificationUtil;
 import com.arknights.bot.infra.util.SendMsgUtil;
 import com.arknights.bot.infra.util.TextToImageUtil;
@@ -57,6 +55,8 @@ public class GroupsChatServiceImpl implements GroupsChatService {
     private GroupChatMapper groupChatMapper;
     @Resource
     private GaChaInfoMapper gaChaInfoMapper;
+    @Resource
+    private SkillInfoMapper skillInfoMapper;
 
     @Autowired
     private SendMsgUtil sendMsgUtil;
@@ -198,8 +198,11 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 resultType = Constance.TYPE_JUST_TEXT;
                 break;
             case SkillQuery:
-                attachContent = Constance.SKILL_QUERY;
-                resultType = Constance.TYPE_JUST_IMG;
+                if(!StringUtils.isBlank(result)) {
+                    // result内容为干员名
+                    attachContent = Constance.SKILL_QUERY;
+                    resultType = Constance.TYPE_JUST_IMG;
+                }
                 break;
             default:
                 if(StringUtils.isBlank(result)) {
@@ -442,17 +445,17 @@ public class GroupsChatServiceImpl implements GroupsChatService {
     }
 
     public String getSkillInfoImageUrl(String result){
-        Long processId = Long.valueOf(result);
-        log.info("processId批次号为:{}", processId);
+        String name = result;
+        log.info("当前查询干员为:{}", name);
         result = "";
-        if (Objects.nonNull(processId)) {
-            List<GaChaInfo> gaChaInfoList = gaChaInfoMapper.selectGaChaByProcessId(processId);
-            if (CollectionUtils.isEmpty(gaChaInfoList)) {
+        if (StringUtils.isNotBlank(name)) {
+            List<SkillLevelInfo> skillLevelInfoList = skillInfoMapper.selectSkillInfoByName(name);
+            if (CollectionUtils.isEmpty(skillLevelInfoList)) {
                 return null;
             }
             try {
                 // 生成image转url
-                result =  CallOPQApiSendImgMsg(gaChaInfoList);
+                result =  CallOPQApiSendSkillImgMsg(skillLevelInfoList);
             } catch (Exception e){
                 e.printStackTrace();
             }
@@ -666,6 +669,179 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 length++;
             }
         }
+
+
+        g.dispose();
+
+        return image;
+    }
+
+
+    /**
+     * 干员技能信息封装
+     * @param skillLevelInfoList
+     * @return
+     */
+    public String CallOPQApiSendSkillImgMsg( List<SkillLevelInfo> skillLevelInfoList) {
+
+        //保存结果
+        int height = 0;
+        java.util.List<BufferedImage> imagesList = new ArrayList<>();
+        boolean isReturn = false;
+
+
+        BufferedImage pic = drawPicBySkillInfoList(skillLevelInfoList);
+
+        if (Objects.nonNull(pic)) {
+            isReturn = true;
+            imagesList.add(pic);
+        }
+
+        if (!isReturn) {
+            return null;
+        }
+        int maxHeight = 0;
+        for (BufferedImage bf : imagesList) {
+            maxHeight += bf.getHeight() + 1;
+        }
+        BufferedImage image = new BufferedImage(1250, maxHeight + 10, BufferedImage.TYPE_INT_BGR);
+        Font font = new Font("楷体", Font.BOLD, 50);
+        Graphics g = image.getGraphics();
+        // 先用白色填充整张图片,也就是背景
+        g.setColor(Color.WHITE);
+        // 画出矩形区域，以便于在矩形区域内写入文字
+        g.fillRect(0, 0, 1250, maxHeight + 10);
+        // 设置画笔字体
+        g.setFont(font);
+        for (BufferedImage bf : imagesList) {
+            if (bf != null) {
+                g.drawImage(bf, 0, height, null);
+                height += bf.getHeight();
+            }
+        }
+        g.dispose();
+
+        String s = replaceEnter(new BASE64Encoder().encode(TextToImageUtil.imageToBytes(image)));
+        image = null;
+        return s;
+
+    }
+
+
+    /**
+     * 画出一个组合的结果
+     *
+     * @param value
+     * @return
+     */
+    private BufferedImage drawPicBySkillInfoList(List<SkillLevelInfo> value) {
+
+        String zhName = "";
+        String enName = "";
+        String itemUsage = "";
+        String openLevel = "";
+        String powerType = "";
+        String triggerType = "";
+
+        // 对技能按顺序分组
+        Map<Integer, List<SkillLevelInfo>> skillOrderListMap = value.stream().collect(Collectors.groupingBy(SkillLevelInfo::getSkillOrder));
+        // 技能1，技能2，技能3
+        List<SkillLevelInfo> skillFirstList = skillOrderListMap.get(1);
+        List<SkillLevelInfo> skillSecondList = skillOrderListMap.get(2);
+        List<SkillLevelInfo> skillThirdList = skillOrderListMap.get(3);
+
+        // 按照技能升序排列
+        if(!CollectionUtils.isEmpty(skillFirstList)){
+            skillFirstList = skillFirstList.stream().sorted(Comparator.comparing(SkillLevelInfo::getSkillLevel)).collect(Collectors.toList());
+            zhName = skillFirstList.get(0).getZhName();
+            enName = skillFirstList.get(0).getEnName();
+            itemUsage = skillFirstList.get(0).getItemUsage();
+            openLevel = skillFirstList.get(0).getOpenLevel();
+
+            if(!CollectionUtils.isEmpty(skillSecondList)){
+                skillSecondList = skillSecondList.stream().sorted(Comparator.comparing(SkillLevelInfo::getSkillLevel)).collect(Collectors.toList());
+                if(!CollectionUtils.isEmpty(skillThirdList)){
+                    skillThirdList = skillThirdList.stream().sorted(Comparator.comparing(SkillLevelInfo::getSkillLevel)).collect(Collectors.toList());
+                }
+            }
+        } else {
+            log.error("一技能信息为空");
+            return null;
+        }
+        log.info("一技能list:{}", skillFirstList);
+        log.info("二技能list:{}", skillSecondList);
+        log.info("三技能list:{}", skillThirdList);
+
+        int height = 60;
+        log.info("height:{}", height);
+
+        int length = 0;
+        BufferedImage image = new BufferedImage(1250, (height + 1) * 50 + 10, BufferedImage.TYPE_INT_BGR);
+        Font h2Font = new Font("楷体", Font.BOLD, 50);
+        Font h1Font = new Font("楷体", Font.BOLD, 60);
+        Font titleFont = new Font("楷体", Font.BOLD, 70);
+        Font font = new Font("楷体", Font.BOLD, 20);
+        Graphics g = image.getGraphics();
+        // 先用白色填充整张图片,也就是背景
+        g.setColor(Color.WHITE);
+        //画出矩形区域，以便于在矩形区域内写入文字
+        g.fillRect(0, 0, 1250, (height + 1) * 50 + 10);
+        // 设置画笔字体
+        g.setFont(font);
+
+        // 顶头
+     // 草绿色
+        // g.setColor(new Color(174, 213, 76));
+        // 干员名称
+        g.setColor(Color.BLACK);
+        g.drawString(enName, 0, 50);
+        g.setFont(titleFont);
+        g.drawString(zhName, 0, 100);
+        // 黑色
+        // 招聘合同词
+        g.drawString(itemUsage, 0, 170);
+
+        // 技能
+        g.setFont(h1Font);
+        g.drawString("技能", 0, 230);
+        // 一技能
+        g.setFont(h2Font);
+        // 铁青色
+        g.setColor(new Color(70, 130, 180));
+        g.drawString("一技能   " + openLevel, 0, 280);
+        powerType = skillFirstList.get(0).getPowerType();
+        triggerType = skillFirstList.get(0).getTriggerType();
+        g.drawString(powerType + "\t" + triggerType + openLevel, 200, 280);
+        // 表格上下间距
+        int cellHeight = 60;
+        // 表格总宽
+        int tableWeight = 1000;
+        int i = 6;
+        g.setColor(Color.GRAY);
+        int count = 0;
+        for(SkillLevelInfo firstSkill : skillFirstList){
+            g.setFont(font);
+            // 绘制线段(单元格)
+            // drawdrawLine(x1, y1, x2, y2) 分别代表第一个点的x,y 坐标和 第二个点的x, y坐标
+            g.drawLine(0, i*cellHeight, tableWeight, i*cellHeight);
+            g.setColor(Color.BLACK);
+            if(count==0){
+                g.drawString("等级", 0, i*cellHeight+2);
+                g.drawString("描述", 100, i*cellHeight+2);
+                g.drawString("初始", 700, i*cellHeight+2);
+                g.drawString("消耗", 750, i*cellHeight+2);
+                g.drawString("持续", 850, i*cellHeight+2);
+            }else {
+                g.drawString(firstSkill.getSkillLevel().toString() , 0, i*cellHeight+2);
+                g.drawString(firstSkill.getDescription() , 100, i*cellHeight+2);
+                g.drawString(firstSkill.getInitialValue().toString() , 700, i*cellHeight+2);
+                g.drawString(firstSkill.getConsumeValue().toString() , 750, i*cellHeight+2);
+                g.drawString(firstSkill.getSpan().toString() , 850, i*cellHeight+2);
+            }
+            i++;
+            count++;
+        }
+
 
 
         g.dispose();

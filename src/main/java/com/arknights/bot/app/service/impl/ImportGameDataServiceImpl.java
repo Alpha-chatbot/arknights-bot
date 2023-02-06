@@ -196,6 +196,9 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
                 String skillName = jsonObject.getString("name");
                 // 技能描述
                 String description = jsonObject.getString("description");
+                if(StringUtils.isBlank(description)){
+                    continue;
+                }
                 // 1表示手动触发 2表示自动触发
                 String triggerType = jsonObject.getString("skillType");
                 if ("1".equals(triggerType)) {
@@ -274,13 +277,13 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
             if (!CollectionUtils.isEmpty(skillUpdateList)) {
                 inf.updateSkillInfo(skillUpdateList);
             } else {
-                log.error("需更新数据为0条");
+                log.info("需更新数据为0条");
             }
             // 插入
             if (!CollectionUtils.isEmpty(skillInsertList)) {
                 inf.insertSkillInfo(skillInsertList);
             } else {
-                log.error("数据为空, 需要检查数据");
+                log.error("可插入数据为空, 需要检查数据");
             }
             skillUpdateList.clear();
             skillInsertList.clear();

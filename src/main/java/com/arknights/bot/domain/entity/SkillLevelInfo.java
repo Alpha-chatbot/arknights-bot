@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.beans.Transient;
+
 /**
  * 干员技能信息
  * Created by wangzhen on 2023/1/30 11:21
@@ -45,4 +47,13 @@ public class SkillLevelInfo {
     private String openLevel;
     @ApiModelProperty(value = "附加字段1")
     private String attribute1;
+
+    /**
+     * 非本表字段
+     */
+    private String itemUsage;
+    @ApiModelProperty(value = "干员中文名")
+    private String zhName;
+    @ApiModelProperty(value = "干员英文名")
+    private String enName;
 }

@@ -99,7 +99,7 @@
     </update>
 
     <insert id="insertSkillMappingInfo" parameterType="com.arknights.bot.domain.entity.SkillMappingInfo">
-        INSERT INTO skill_info (skill_code,
+        INSERT INTO skill_mapping (skill_code,
                                 key_code,
                                 open_level,
                                 skill_order)

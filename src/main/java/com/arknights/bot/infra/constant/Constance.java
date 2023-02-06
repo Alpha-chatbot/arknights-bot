@@ -37,6 +37,10 @@ public interface Constance {
 
     String SKILL_QUERY = "技能查询";
 
+    String SKILL_SPECIAL_F = "Rank Ⅰ";
+    String SKILL_SPECIAL_S = "Rank Ⅱ";
+    String SKILL_SPECIAL_T = "Rank Ⅲ";
+
     /**
      * 技能相关
      */

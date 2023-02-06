@@ -3,10 +3,34 @@
 <mapper namespace="com.arknights.bot.infra.mapper.SkillInfoMapper">
 
 
-    <select id="selectSkillInfoByCode" resultType="com.arknights.bot.domain.entity.SkillLevelInfo">
-        select *
-        from skill_info
-        where skill_code = #{skillCode}
+    <select id="selectSkillInfoByName" resultType="com.arknights.bot.domain.entity.SkillLevelInfo">
+        select * from
+            (select
+                 si.id,
+                 si.skill_code,
+                 si.skill_name,
+                 si.initial_value,
+                 si.consume_value,
+                 si.description,
+                 si.power_type,
+                 si.trigger_type,
+                 si.skill_level,
+                 si.span,
+                 si.remarks,
+                 si.attribute1,
+                 obi.zh_name,
+                 obi.en_name,
+                 obi.item_usage,
+                 sm.open_level,
+                 sm.skill_order,
+                 ROW_NUMBER() OVER (
+          PARTITION BY si.skill_code, sm. skill_order, si.skill_level
+          ORDER BY si.skill_code, sm. skill_order, si.skill_level DESC) as rownum
+             from operator_base_info obi
+                      LEFT JOIN skill_mapping sm ON obi.key_code = sm.key_code
+                      LEFT JOIN skill_info si ON sm.skill_code = si.skill_code
+             where obi.zh_name = #{name}) as tmp
+        where rownum = 1
     </select>
 
 
