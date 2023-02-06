@@ -142,9 +142,10 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         switch (c) {
             case CaiDan:
                 result = "这里是W测试版初号机1.1\n" +
-                        "0.获取token方法：#token获取教程\n" +
-                        "1.token录入方法：#token录入{你的token}，例如 #token录入a7JD8jDdi9spp\n" +
-                        "2.寻访记录：#寻访记录\n";
+                        "0.获取token方法: #token获取教程\n" +
+                        "1.token录入方法: #token录入{你的token}，例如 #token录入a7JD8jDdi9spp\n" +
+                        "2.寻访记录：#寻访记录\n" +
+                        "3.查询干员技能: 例如 #技能查询#艾雅法拉";
                 resultType = Constance.TYPE_JUST_TEXT;
                 break;
             case TokenHelp:
