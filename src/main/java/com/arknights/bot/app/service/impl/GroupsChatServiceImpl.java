@@ -747,6 +747,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         String openLevel = "";
         String powerType = "";
         String triggerType = "";
+        String skillName = "";
 
         // 对技能按顺序分组
         Map<Integer, List<SkillLevelInfo>> skillOrderListMap = value.stream().collect(Collectors.groupingBy(SkillLevelInfo::getSkillOrder));
@@ -777,36 +778,38 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         log.info("二技能list:{}", skillSecondList);
         log.info("三技能list:{}", skillThirdList);
 
-        int height = 60;
+        int height = 90;
         log.info("height:{}", height);
 
         int length = 0;
         BufferedImage image = new BufferedImage(1250, (height + 1) * 50 + 10, BufferedImage.TYPE_INT_BGR);
-        Font h2Font = new Font("楷体", Font.BOLD, 50);
+        Font h3Font = new Font("楷体", Font.BOLD, 40);
+        Font h2Font = new Font("楷体", Font.BOLD, 45);
         Font h1Font = new Font("楷体", Font.BOLD, 60);
         Font titleFont = new Font("楷体", Font.BOLD, 70);
-        Font font = new Font("楷体", Font.BOLD, 20);
+        Font font = new Font("楷体", Font.BOLD, 22);
         Graphics g = image.getGraphics();
         // 先用白色填充整张图片,也就是背景
         g.setColor(Color.WHITE);
         //画出矩形区域，以便于在矩形区域内写入文字
         g.fillRect(0, 0, 1250, (height + 1) * 50 + 10);
         // 设置画笔字体
-        g.setFont(font);
+        g.setFont(h3Font);
 
         // 干员名称
         g.setColor(Color.BLACK);
         g.drawString(enName, 0, 30);
         g.setFont(titleFont);
-        g.drawString(zhName, 0, 90);
+        g.drawString(zhName, 0, 110);
         // 黑色
         // 招聘合同词
         g.setFont(font);
-        // 草绿色
-        g.setColor(new Color(174, 213, 76));
-        g.drawString(itemUsage, 0, 170);
+        // 金黄色
+        g.setColor(new Color(255, 215, 0));
+        g.drawString(itemUsage, 0, 160);
 
         // 技能
+        g.setColor(Color.BLACK);
         g.setFont(h1Font);
         g.drawString("技能", 0, 230);
         // 一技能
@@ -815,37 +818,45 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         g.setColor(new Color(255, 182, 193));
         powerType = skillFirstList.get(0).getPowerType();
         triggerType = skillFirstList.get(0).getTriggerType();
-        g.drawString("一技能: " + "精英" + openLevel + "开放." + "\t" + powerType + "\t" + triggerType, 0, 280);
+        skillName = skillFirstList.get(0).getSkillName();
+        g.drawString("一技能:"+ skillName + "  精英" + openLevel + "开放.", 0, 280);
+        g.setColor(new Color(174, 213, 76));
+        g.drawString(powerType + "\t\t" + triggerType, 800, 280);
         // 表格上下间距
-        int cellHeight = 60;
+        int cellHeight = 70;
         // 表格总宽
-        int tableWeight = 1000;
+        int tableWeight = 1200;
         int i = 6;
         g.setColor(Color.GRAY);
         int count = 0;
         g.setColor(Color.BLACK);
         g.setFont(font);
-        g.drawString("等级", 0, i * cellHeight);
-        g.drawString("描述", 100, i * cellHeight);
-        g.drawString("初始", 700, i * cellHeight);
-        g.drawString("消耗", 850, i * cellHeight);
-        g.drawString("持续", 900, i * cellHeight);
+        g.drawString("等级", 50, i * cellHeight);
+        g.drawString("描述", 150, i * cellHeight);
+        g.drawString("初始", 900, i * cellHeight);
+        g.drawString("消耗", 1000, i * cellHeight);
+        g.drawString("持续", 1100, i * cellHeight);
         for (SkillLevelInfo firstSkill : skillFirstList) {
             // 绘制线段(单元格)
             // drawdrawLine(x1, y1, x2, y2) 分别代表第一个点的x,y 坐标和 第二个点的x, y坐标
             g.drawLine(0, i * cellHeight, tableWeight, i * cellHeight+ 5);
 
-            g.drawString(firstSkill.getSkillLevel().toString(), 0, i * cellHeight + 10);
+            g.drawString(firstSkill.getSkillLevel().toString(), 50, i * cellHeight + 30);
             String desc = firstSkill.getDescription();
-            if(desc.length()>28) {
-                g.drawString(desc.substring(0, 28), 100, i * cellHeight + 10);
-                g.drawString(desc.substring(28), 100, i * cellHeight + 30);
+            if(desc.length()>32) {
+                g.drawString(desc.substring(0, 32), 150, i * cellHeight + 30);
+                if(desc.length()>50) {
+                    g.drawString(desc.substring(32, 50), 150, i * cellHeight + 60);
+                    g.drawString(desc.substring(50), 150, i * cellHeight + 90);
+                } else {
+                    g.drawString(desc.substring(32), 150, i * cellHeight + 60);
+                }
             } else {
-                g.drawString(desc, 100, i * cellHeight + 10);
+                g.drawString(desc, 100, i * cellHeight + 30);
             }
-            g.drawString(firstSkill.getInitialValue().toString(), 700, i * cellHeight + 10);
-            g.drawString(firstSkill.getConsumeValue().toString(), 750, i * cellHeight + 10);
-            g.drawString(firstSkill.getSpan().toString(), 850, i * cellHeight + 10);
+            g.drawString(firstSkill.getInitialValue().toString(), 900, i * cellHeight + 30);
+            g.drawString(firstSkill.getConsumeValue().toString(), 1000, i * cellHeight + 30);
+            g.drawString(firstSkill.getSpan().toString(), 1100, i * cellHeight + 30);
             i++;
         }
 
