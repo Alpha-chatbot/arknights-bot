@@ -896,13 +896,13 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 g.setColor(Color.BLACK);
                 g.drawString(skillLevel, 30, i * cellHeight + 30);
                 String desc = skillLevelInfo.getDescription();
-                if (desc.length() > 62) {
-                    g.drawString(desc.substring(0, 62), 150, i * cellHeight + 30);
-                    if (desc.length() > 125) {
-                        g.drawString(desc.substring(62, 125), 150, i * cellHeight + 60);
-                        g.drawString(desc.substring(125), 150, i * cellHeight + 90);
+                if (desc.length() > 60) {
+                    g.drawString(desc.substring(0, 60), 100, i * cellHeight + 30);
+                    if (desc.length() > 120) {
+                        g.drawString(desc.substring(60, 120), 100, i * cellHeight + 60);
+                        g.drawString(desc.substring(120), 100, i * cellHeight + 90);
                     } else {
-                        g.drawString(desc.substring(62), 150, i * cellHeight + 60);
+                        g.drawString(desc.substring(60), 100, i * cellHeight + 60);
                     }
                 } else {
                     g.drawString(desc, 100, i * cellHeight + 30);
@@ -964,12 +964,12 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 g.drawString(skillLevel, 30, i * cellHeight + 30);
                 String desc = skillLevelInfo.getDescription();
                 if (desc.length() > 60) {
-                    g.drawString(desc.substring(0, 60), 150, i * cellHeight + 30);
+                    g.drawString(desc.substring(0, 60), 100, i * cellHeight + 30);
                     if (desc.length() > 120) {
-                        g.drawString(desc.substring(60, 120), 150, i * cellHeight + 60);
-                        g.drawString(desc.substring(120), 150, i * cellHeight + 90);
+                        g.drawString(desc.substring(60, 120), 100, i * cellHeight + 60);
+                        g.drawString(desc.substring(120), 100, i * cellHeight + 90);
                     } else {
-                        g.drawString(desc.substring(60), 150, i * cellHeight + 60);
+                        g.drawString(desc.substring(60), 100, i * cellHeight + 60);
                     }
                 } else {
                     g.drawString(desc, 100, i * cellHeight + 30);
