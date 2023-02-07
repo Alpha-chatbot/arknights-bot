@@ -776,7 +776,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         // 先用白色填充整张图片,也就是背景
         g.setColor(Color.WHITE);
         //画出矩形区域，以便于在矩形区域内写入文字
-        g.fillRect(0, 0, 1250, (height + 1) * 40 );
+        g.fillRect(0, 0, 1550, (height + 1) * 40 );
         // 设置画笔字体
         g.setFont(h3Font);
 
