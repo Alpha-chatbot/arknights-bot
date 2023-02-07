@@ -760,13 +760,12 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         int height = 90;
         log.info("height:{}", height);
 
-        int length = 0;
         // 表格上下间距
         int cellHeight = 70;
         // 表格总宽
-        int tableWeight = 1500;
+        int tableWeight = 1600;
         int i = 4;
-        BufferedImage image = new BufferedImage(1550, (height + 1) * 40, BufferedImage.TYPE_INT_BGR);
+        BufferedImage image = new BufferedImage(1650, (height + 1) * 40, BufferedImage.TYPE_INT_BGR);
         Font h3Font = new Font("楷体", Font.BOLD, 40);
         Font h2Font = new Font("楷体", Font.BOLD, 45);
         Font h1Font = new Font("楷体", Font.BOLD, 60);
@@ -776,7 +775,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         // 先用白色填充整张图片,也就是背景
         g.setColor(Color.WHITE);
         //画出矩形区域，以便于在矩形区域内写入文字
-        g.fillRect(0, 0, 1550, (height + 1) * 40 );
+        g.fillRect(0, 0, 1650, (height + 1) * 40);
         // 设置画笔字体
         g.setFont(h3Font);
 
@@ -804,58 +803,59 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         triggerType = skillFirstList.get(0).getTriggerType();
         skillName = skillFirstList.get(0).getSkillName();
         openLevel = skillFirstList.get(0).getOpenLevel();
-        g.drawString("一技能:"+ skillName + "  精英" + openLevel + "开放", 0, i*cellHeight);
+        g.drawString("一技能:" + skillName + "  精英" + openLevel + "开放", 0, i * cellHeight);
         g.setColor(new Color(174, 213, 76));
-        g.drawString(powerType + "  " + triggerType, 800, i*cellHeight);
+        g.drawString(powerType + "  " + triggerType, 800, i * cellHeight);
         i++;
 
-        g.setColor(Color.GRAY);
+        g.setColor(Color.BLACK);
         int count = 0;
         g.setFont(font);
-        g.drawString("等级", 50, i * cellHeight);
+        g.drawString("等级", 30, i * cellHeight);
         g.drawString("描述", 150, i * cellHeight);
-        g.drawString("初始", 1350, i * cellHeight);
-        g.drawString("消耗", 1400, i * cellHeight);
-        g.drawString("持续", 1450, i * cellHeight);
+        g.drawString("初始", 1450, i * cellHeight);
+        g.drawString("消耗", 1500, i * cellHeight);
+        g.drawString("持续", 1550, i * cellHeight);
         for (SkillLevelInfo firstSkill : skillFirstList) {
             // 绘制线段(单元格)
             // drawdrawLine(x1, y1, x2, y2) 分别代表第一个点的x,y 坐标和 第二个点的x, y坐标
-            g.drawLine(0, i * cellHeight+ 5, tableWeight, i * cellHeight+ 5);
+            g.setColor(Color.GRAY);
+            g.drawLine(0, i * cellHeight + 5, tableWeight, i * cellHeight + 5);
             Long sk = firstSkill.getSkillLevel();
             String skillLevel = "";
-            if(sk==8){
+            if (sk == 8) {
                 skillLevel = Constance.SKILL_SPECIAL_F;
-            } else if(sk==9){
+            } else if (sk == 9) {
                 skillLevel = Constance.SKILL_SPECIAL_S;
-            } else if(sk==10){
+            } else if (sk == 10) {
                 skillLevel = Constance.SKILL_SPECIAL_T;
             } else {
                 skillLevel = sk.toString();
             }
             g.setColor(Color.BLACK);
-            g.drawString(skillLevel, 50, i * cellHeight + 30);
+            g.drawString(skillLevel, 30, i * cellHeight + 30);
             String desc = firstSkill.getDescription();
-            if(desc.length()>65) {
-                g.drawString(desc.substring(0, 65), 150, i * cellHeight + 30);
-                if(desc.length()>130) {
-                    g.drawString(desc.substring(65, 130), 150, i * cellHeight + 60);
-                    g.drawString(desc.substring(130), 150, i * cellHeight + 90);
+            if (desc.length() > 60) {
+                g.drawString(desc.substring(0, 60), 150, i * cellHeight + 30);
+                if (desc.length() > 120) {
+                    g.drawString(desc.substring(60, 120), 150, i * cellHeight + 60);
+                    g.drawString(desc.substring(120), 150, i * cellHeight + 90);
                 } else {
-                    g.drawString(desc.substring(65), 150, i * cellHeight + 60);
+                    g.drawString(desc.substring(60), 150, i * cellHeight + 60);
                 }
             } else {
                 g.drawString(desc, 100, i * cellHeight + 30);
             }
-            g.drawString(firstSkill.getInitialValue().toString(), 1350, i * cellHeight + 30);
-            g.drawString(firstSkill.getConsumeValue().toString(), 1400, i * cellHeight + 30);
-            g.drawString(firstSkill.getSpan().toString(), 1450, i * cellHeight + 30);
+            g.drawString(firstSkill.getInitialValue().toString(), 1450, i * cellHeight + 30);
+            g.drawString(firstSkill.getConsumeValue().toString(), 1500, i * cellHeight + 30);
+            g.drawString(firstSkill.getSpan().toString(), 1550, i * cellHeight + 30);
             i++;
         }
         // 闭合线
         g.setColor(Color.GRAY);
-        g.drawLine(0, i * cellHeight+ 5, tableWeight, i * cellHeight+ 5);
+        g.drawLine(0, i * cellHeight + 5, tableWeight, i * cellHeight + 5);
 
-        if(!CollectionUtils.isEmpty(skillSecondList)) {
+        if (!CollectionUtils.isEmpty(skillSecondList)) {
             i++;
             // 二技能
             g.setFont(h2Font);
@@ -872,11 +872,11 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             i++;
             g.setColor(Color.BLACK);
             g.setFont(font);
-            g.drawString("等级", 50, i * cellHeight);
+            g.drawString("等级", 30, i * cellHeight);
             g.drawString("描述", 150, i * cellHeight);
-            g.drawString("初始", 1350, i * cellHeight);
-            g.drawString("消耗", 1400, i * cellHeight);
-            g.drawString("持续", 1450, i * cellHeight);
+            g.drawString("初始", 1450, i * cellHeight);
+            g.drawString("消耗", 1500, i * cellHeight);
+            g.drawString("持续", 1550, i * cellHeight);
             for (SkillLevelInfo skillLevelInfo : skillSecondList) {
                 // 绘制线段(单元格)
                 // drawdrawLine(x1, y1, x2, y2) 分别代表第一个点的x,y 坐标和 第二个点的x, y坐标
@@ -894,22 +894,22 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                     skillLevel = sk.toString();
                 }
                 g.setColor(Color.BLACK);
-                g.drawString(skillLevel, 50, i * cellHeight + 30);
+                g.drawString(skillLevel, 30, i * cellHeight + 30);
                 String desc = skillLevelInfo.getDescription();
-                if (desc.length() > 65) {
-                    g.drawString(desc.substring(0, 65), 150, i * cellHeight + 30);
-                    if (desc.length() > 130) {
-                        g.drawString(desc.substring(65, 130), 150, i * cellHeight + 60);
-                        g.drawString(desc.substring(130), 150, i * cellHeight + 90);
+                if (desc.length() > 62) {
+                    g.drawString(desc.substring(0, 62), 150, i * cellHeight + 30);
+                    if (desc.length() > 125) {
+                        g.drawString(desc.substring(62, 125), 150, i * cellHeight + 60);
+                        g.drawString(desc.substring(125), 150, i * cellHeight + 90);
                     } else {
-                        g.drawString(desc.substring(65), 150, i * cellHeight + 60);
+                        g.drawString(desc.substring(62), 150, i * cellHeight + 60);
                     }
                 } else {
                     g.drawString(desc, 100, i * cellHeight + 30);
                 }
-                g.drawString(skillLevelInfo.getInitialValue().toString(), 1350, i * cellHeight + 30);
-                g.drawString(skillLevelInfo.getConsumeValue().toString(), 1400, i * cellHeight + 30);
-                g.drawString(skillLevelInfo.getSpan().toString(), 1450, i * cellHeight + 30);
+                g.drawString(skillLevelInfo.getInitialValue().toString(), 1450, i * cellHeight + 30);
+                g.drawString(skillLevelInfo.getConsumeValue().toString(), 1500, i * cellHeight + 30);
+                g.drawString(skillLevelInfo.getSpan().toString(), 1550, i * cellHeight + 30);
                 i++;
             }
             // 闭合线
@@ -917,8 +917,9 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             g.drawLine(0, i * cellHeight + 5, tableWeight, i * cellHeight + 5);
         }
 
-        if(!CollectionUtils.isEmpty(skillThirdList)) {
+        if (!CollectionUtils.isEmpty(skillThirdList)) {
             i++;
+            int counts = 0;
             // 三技能
             g.setFont(h2Font);
             // 猛男粉
@@ -934,16 +935,20 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             i++;
             g.setColor(Color.BLACK);
             g.setFont(font);
-            g.drawString("等级", 50, i * cellHeight);
+            // 三技能有时较长，需要三行
+            i = i-4;
+            cellHeight = 82;
+            g.drawString("等级", 30, i * cellHeight);
             g.drawString("描述", 150, i * cellHeight);
-            g.drawString("初始", 1350, i * cellHeight);
-            g.drawString("消耗", 1400, i * cellHeight);
-            g.drawString("持续", 1450, i * cellHeight);
+            g.drawString("初始", 1450, i * cellHeight);
+            g.drawString("消耗", 1500, i * cellHeight);
+            g.drawString("持续", 1550, i * cellHeight);
             for (SkillLevelInfo skillLevelInfo : skillThirdList) {
                 // 绘制线段(单元格)
                 // drawdrawLine(x1, y1, x2, y2) 分别代表第一个点的x,y 坐标和 第二个点的x, y坐标
                 g.setColor(Color.GRAY);
-                g.drawLine(0, i * cellHeight + 5, tableWeight, i * cellHeight + 5);
+                g.drawLine(0, i * cellHeight + 5 , tableWeight, i * cellHeight + 5 );
+
                 Long sk = skillLevelInfo.getSkillLevel();
                 String skillLevel = "";
                 if (sk == 8) {
@@ -956,27 +961,27 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                     skillLevel = sk.toString();
                 }
                 g.setColor(Color.BLACK);
-                g.drawString(skillLevel, 50, i * cellHeight + 30);
+                g.drawString(skillLevel, 30, i * cellHeight + 30);
                 String desc = skillLevelInfo.getDescription();
-                if (desc.length() > 65) {
-                    g.drawString(desc.substring(0, 65), 150, i * cellHeight + 30);
-                    if (desc.length() > 130) {
-                        g.drawString(desc.substring(65, 130), 150, i * cellHeight + 60);
-                        g.drawString(desc.substring(130), 150, i * cellHeight + 90);
+                if (desc.length() > 60) {
+                    g.drawString(desc.substring(0, 60), 150, i * cellHeight + 30);
+                    if (desc.length() > 120) {
+                        g.drawString(desc.substring(60, 120), 150, i * cellHeight + 60);
+                        g.drawString(desc.substring(120), 150, i * cellHeight + 90);
                     } else {
-                        g.drawString(desc.substring(65), 150, i * cellHeight + 60);
+                        g.drawString(desc.substring(60), 150, i * cellHeight + 60);
                     }
                 } else {
                     g.drawString(desc, 100, i * cellHeight + 30);
                 }
-                g.drawString(skillLevelInfo.getInitialValue().toString(), 1350, i * cellHeight + 30);
-                g.drawString(skillLevelInfo.getConsumeValue().toString(), 1400, i * cellHeight + 30);
-                g.drawString(skillLevelInfo.getSpan().toString(), 1450, i * cellHeight + 30);
+                g.drawString(skillLevelInfo.getInitialValue().toString(), 1450, i * cellHeight + 30);
+                g.drawString(skillLevelInfo.getConsumeValue().toString(), 1500, i * cellHeight + 30);
+                g.drawString(skillLevelInfo.getSpan().toString(), 1550, i * cellHeight + 30);
                 i++;
             }
             // 闭合线
             g.setColor(Color.GRAY);
-            g.drawLine(0, i * cellHeight + 5, tableWeight, i * cellHeight + 5);
+            g.drawLine(0, i * cellHeight + 5 , tableWeight, i * cellHeight + 5 );
         }
 
         g.dispose();
