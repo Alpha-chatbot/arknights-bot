@@ -9,6 +9,10 @@ import java.util.List;
  **/
 public interface UserFoundMapper {
 
+    /**
+     * 对指定群组进行定时消息发送
+     * @return
+     */
     List<Long> selectAllGroups();
 
 
