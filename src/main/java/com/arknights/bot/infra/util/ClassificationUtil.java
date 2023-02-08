@@ -24,7 +24,7 @@ public class ClassificationUtil {
         /**
          * 新增内容，寻访记录
          */
-        map.put("寻访记录", GaCha);
+        map.put("寻访查询", GaCha);
         /**
          * 新增内容:获取粥的官网查询token教程
          */

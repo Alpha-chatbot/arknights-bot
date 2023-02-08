@@ -126,12 +126,10 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         // 技能查询操作
         if (text.startsWith(Constance.SKILL_QUERY)) {
             c = SkillQuery;
-            String[] split = text.split(Constance.START_MARK);
-            if (split.length == 2) {
-                result = split[1];
-            } else {
-                log.info("获取干员名异常，正确格式为 #技能查询#艾雅法拉");
-                result = "获取干员技能异常，正确格式为 #技能查询#艾雅法拉";
+            result = text.substring(Constance.SKILL_QUERY.length());
+            if (StringUtils.isBlank(result)) {
+                log.info("获取干员名异常，正确格式为 #技能 艾雅法拉");
+                result = "获取干员技能异常，正确格式为 #技能 艾雅法拉";
                 resultType = Constance.TYPE_JUST_TEXT;
             }
         }
@@ -145,8 +143,8 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 result = "这里是W测试版初号机1.1\n" +
                         "0.获取token方法: #token获取教程\n" +
                         "1.token录入方法: #token录入{你的token}，例如 #token录入a7JD8jDdi9spp\n" +
-                        "2.寻访记录：#寻访记录\n" +
-                        "3.查询干员技能: 例如 #技能查询#艾雅法拉";
+                        "2.寻访查询：#寻访查询\n" +
+                        "3.干员技能查询: 例如 #技能 艾雅法拉";
                 resultType = Constance.TYPE_JUST_TEXT;
                 break;
             case TokenHelp:

@@ -35,7 +35,7 @@ public interface Constance {
 
     String GACHA_LOGO = "gacha";
 
-    String SKILL_QUERY = "技能查询";
+    String SKILL_QUERY = "技能 ";
 
     String SKILL_SPECIAL_F = "RankⅠ";
     String SKILL_SPECIAL_S = "RankⅡ";

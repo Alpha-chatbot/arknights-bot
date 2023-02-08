@@ -4,25 +4,29 @@ spring:
   main:
     allow-bean-definition-overriding: true
   datasource:
-    url: jdbc:mysql://localhost:3306/arknights?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8
+    url: jdbc:mysql://localhost:3306/arknights?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=false
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      # 连接池最小空闲连接数
+      minimum-idle: ${SPRING_DATASOURCE_MINIMUM_IDLE:20}
+      # 连接池允许的最大连接数
+      maximum-pool-size: ${SPRING_DATASOURCE_MAXIMUM_POOL_SIZE:200}
+      # 等待连接池分配连接的最大时长（毫秒）(网络不好或者服务与数据库所在服务器不同的可以考虑延长一些)
+      connection-timeout: ${SPRING_DATASOURCE_CONNECTION_TIMEOUT:90000}
+      max-lifetime: 1200000
 mybatis:
   mapperLocations: classpath*:/mapper/*.xml
   configuration:
     mapUnderscoreToCamelCase: true
 scheduled:
-  # 每天晚8点日报统计
-  countJob: 0 0 20 */1 * ?
   # 每天早8点播报干员庆生
   birthdayJob: 0 0 8 */1 * ?
-  # 每3分钟监听一次B站动态
-  biliJob: 0 */3 * * * ?
-  # 每3分钟监听一次微博动态
-  sinaJob: 0 */3 * * * ?
-  # 每天9点检查一次数据更新
-  updateJob: 0 0 9 */1 * ?
+  # 每个星期六早06点30 更新干员基础数据
+  updateOperatorBaseJob: 0 30 06 ? * 6
+  # 每个星期六早06点40 更新干员技能数据
+  updateSkillInfoJob: 0 40 06 ? * 6
   # 每周日晚5点剿灭提醒
   cleanJob: 0 0 17 ? * SUN
 userConfig:
@@ -34,3 +38,6 @@ baiduConfig:
   APP_ID:
   API_KEY:
   SECRET_KEY:
+pathConfig:
+  #json文件所在路径 原数据取自https://github.com/Kengxxiao/ArknightsGameData 后续研究github库远程自动下载办法
+  path: /zoe/arknights-bot/data

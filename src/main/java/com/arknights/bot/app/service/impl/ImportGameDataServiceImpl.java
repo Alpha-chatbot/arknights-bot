@@ -18,6 +18,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +48,8 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
     private static final String BILI_WIKI_URL = "https://wiki.biligame.com/arknights/";
     private static final String PRTS_WIKI_URL = "https://prts.wiki/index.php";
 
+    @Value("${pathConfig.path}")
+    private String downloadPath;
 
     @Autowired
     private RequestMsgUtil requestMsgUtil;
@@ -79,11 +82,10 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
         importGameDataMapper.cleanOperatorInfo();
         importGameDataMapper.cleanSkillMappingInfo();
         importGameDataMapper.cleanSkillInfo();
-        String uploadFileSavePath = "F:\\backup";
-        // String uploadFileSavePath = FILE_PATH_PREFIX;
+        // String uploadFileSavePath = "F:\\backup";
+        String uploadFileSavePath = downloadPath;
 
         // 下载文件进行解析
-        // File downloadFile = new File(uploadFileSavePath + File.separator + "character_table.json");
         File jsonFile = new File(uploadFileSavePath + File.separator + "character_table.json");
         //通过上面那个方法获取json文件的内容
         String jsonData = getStr(jsonFile);
@@ -166,11 +168,10 @@ public class ImportGameDataServiceImpl implements ImportGameDataService {
     @Override
     public void skillInfoImport(String content) {
 
-        String uploadFileSavePath = "F:\\backup";
-        // String uploadFileSavePath = FILE_PATH_PREFIX;
+        // String uploadFileSavePath = "F:\\backup";
+        String uploadFileSavePath = downloadPath;
 
         // 下载文件进行解析
-        // File downloadFile = new File(uploadFileSavePath + File.separator + "character_table.json");
         File jsonFile = new File(uploadFileSavePath + File.separator + "skill_table.json");
         //通过上面那个方法获取json文件的内容
         String jsonData = getStr(jsonFile);

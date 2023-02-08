@@ -617,8 +617,6 @@ public class BotApplicationTests {
                 return 1;
             }
         });
-        System.out.println(listTest);
-
 
 
     }
