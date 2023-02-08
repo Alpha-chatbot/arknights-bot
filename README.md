@@ -67,7 +67,8 @@ https://developer.gitter.im/apps
 1.需要字体配置：楷体文件(simkai.ttl)复制到linux服务器如下路径下，不然文字转图片会出现乱码：
 /usr/local/java/jre/lib/fonts
 2.楷体文件在resources下的Font里有，想换成其他字体自行百度即可（替换方法相同）
-3.发版指令
+3.发版相关
+配置文件中修改根据需求修改localhostip地址，OPQ绑定qq号，数据解析文件路径等
 打包上传至指定位置然后执行:
 nohup java -Xms180M -Xmx180M -jar /zoe/arknights-bot/jar/arknights-bot.jar > /zoe/arknights-bot/jar/logs/arknights-bot.log 2>&1 &
 4.目前是手动上传json数据来定时解析，路径自定义即可，配置变量见pathConfig.path
