@@ -483,48 +483,10 @@ public class GroupsChatServiceImpl implements GroupsChatService {
      * @param gaChaInfoList
      */
     public String CallOPQApiSendImgMsg(List<GaChaInfo> gaChaInfoList) {
-
-        //保存结果
-        int height = 0;
-        java.util.List<BufferedImage> imagesList = new ArrayList<>();
-        boolean isReturn = false;
-
-
         BufferedImage pic = drawPicByGaChaList(gaChaInfoList);
-
-        if (Objects.nonNull(pic)) {
-            isReturn = true;
-            imagesList.add(pic);
-        }
-
-        if (!isReturn) {
-            return null;
-        }
-        int maxHeight = 0;
-        for (BufferedImage bf : imagesList) {
-            maxHeight += bf.getHeight() + 1;
-        }
-        BufferedImage image = new BufferedImage(1250, maxHeight + 10, BufferedImage.TYPE_INT_BGR);
-        Font font = new Font("楷体", Font.BOLD, 50);
-        Graphics g = image.getGraphics();
-        // 先用白色填充整张图片,也就是背景
-        g.setColor(Color.WHITE);
-        // 画出矩形区域，以便于在矩形区域内写入文字
-        g.fillRect(0, 0, 1250, maxHeight + 10);
-        // 设置画笔字体
-        g.setFont(font);
-        for (BufferedImage bf : imagesList) {
-            if (bf != null) {
-                g.drawImage(bf, 0, height, null);
-                height += bf.getHeight();
-            }
-        }
-        g.dispose();
-
-        String s = replaceEnter(new BASE64Encoder().encode(TextToImageUtil.imageToBytes(image)));
-        image = null;
+        String s = replaceEnter(new BASE64Encoder().encode(TextToImageUtil.imageToBytes(pic)));
+        pic = null;
         return s;
-
     }
 
 
@@ -536,9 +498,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
      */
     private BufferedImage drawPicByGaChaList(List<GaChaInfo> value) {
 
-
         // 根据模板分为三部分填充
-
         //获取到Key，Value
         String top = "[ 寻访统计 ]";
         String part1 = "[ 卡池统计 ]";
@@ -686,28 +646,11 @@ public class GroupsChatServiceImpl implements GroupsChatService {
      * @return
      */
     public String CallOPQApiSendSkillImgMsg(List<SkillLevelInfo> skillLevelInfoList) {
-
-        //保存结果
-        int height = 0;
-        java.util.List<BufferedImage> imagesList = new ArrayList<>();
-        boolean isReturn = false;
-
-
         BufferedImage image = drawPicBySkillInfoList(skillLevelInfoList);
-
-        if (Objects.nonNull(image)) {
-            isReturn = true;
-            imagesList.add(image);
-        }
-
-        if (!isReturn) {
+        if (Objects.isNull(image)) {
             return null;
         }
-
-        String s = replaceEnter(new BASE64Encoder().encode(TextToImageUtil.imageToBytes(image)));
-        image = null;
-        return s;
-
+        return replaceEnter(new BASE64Encoder().encode(TextToImageUtil.imageToBytes(image)));
     }
 
 

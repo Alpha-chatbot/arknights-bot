@@ -22,6 +22,10 @@ public class UpdateOperatorBaseDataJob {
     @Autowired
     private ImportGameDataService importGameDataService;
 
+    /**
+     * 干员等游戏数据取自json解析，json文件来源于https://github.com/Kengxxiao/ArknightsGameData ，后续可能添加github库远程自动下载方法,
+     * 现在是手动下载xxx.json上传到服务器指定路径下
+     */
     @Scheduled(cron = "${scheduled.updateOperatorBaseJob}")
     @Async
     public void updateOperatorBaseJob() {
