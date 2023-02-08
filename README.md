@@ -5,7 +5,7 @@ A qq bot about arknights..
 
 一个并没有什么实际用途的明日方舟qq群聊bot
 
-PS:  （代码质量低下），本项目当前版本即时部署效率不高（使用springboot+mybatis+mysql+OPQ，部署服务器为centos7），主要是给沙雕群友整点乐子，后续可能会搞一些比较实用的功能。
+PS:  （代码质量低下），本项目当前版本即时部署效率不高（使用springboot+mybatis+mysql8+OPQ，部署服务器为centos7），主要是给沙雕群友整点乐子，后续可能会搞一些比较实用的功能。
  配置见上，OPQ是一款机器人框架，可以将程序挂载在一个qq（建议用小号，防止风控误封）上来实现群聊消息交互（OPQ的交互指令通过lua文件实现，更多指令见[OPQ WIKI](https://github.com/opq-osc/OPQ/wiki)）。
 
 PPS：部分工具类引用自[02大佬](https://github.com/Strelizia02/ArknightsAPI)的工具类封装，特此感谢
