@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Bot群聊调用功能相关
- * <p>
  * Created by wangzhen on 2023/1/19 20:02
  *
  * @author 14869

@@ -4,6 +4,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
+ * 寻访类实体
+ *
  * Created by wangzhen on 2023/1/23 14:24
  * @author 14869
  */
