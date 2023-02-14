@@ -5,8 +5,8 @@ spring:
     allow-bean-definition-overriding: true
   datasource:
     url: jdbc:mysql://localhost:3306/arknights?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=false
-    username: root
-    password: root
+    username: ${SPRING_DATASOURCE_USERNAME:username}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       # 连接池最小空闲连接数
@@ -31,7 +31,7 @@ scheduled:
   cleanJob: 0 0 17 ? * SUN
 userConfig:
   #登录的机器人qq
-  loginQq:
+  loginQq: ${QQ:123456}
   #OPQ框架部署的IP
   OPQUrl: localhost
 baiduConfig:

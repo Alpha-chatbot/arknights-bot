@@ -268,13 +268,13 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         }
         List<Long> limit = qqMsgRateList.get(qq);
         if (limit.size() <= length) {
-            //队列未满三条，直接返回消息
+            // 同一qq的消息在队列未满三条，直接返回消息
             limit.add(System.currentTimeMillis());
         } else {
             if (getSecondDiff(limit.get(0), second)) {
-                //队列长度超过三条，但是距离首条消息已经大于10秒
+                //同一队列长度超过三条，但是距离首条消息已经大于10秒
                 limit.remove(0);
-                //把后面两次提示的时间戳删掉
+                // remove操作后元素前移,如果依然超过3条就把多出的时间戳删掉
                 while (limit.size() > 3) {
                     limit.remove(3);
                 }
@@ -351,6 +351,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
     public void eventMessageHandler(GroupsEventInfo message) {
         Long qq = message.getQq();
         Long groupId = message.getGroupId();
+        String name = message.getNickName();
         log.info("接受到事件消息:{}", message.getContent());
         String type = message.getMsgType();
         String result;
