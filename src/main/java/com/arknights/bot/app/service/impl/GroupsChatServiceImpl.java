@@ -512,7 +512,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         // 当前卡池寻访数
         int poolGaChaCounts = 0;
 
-        // 对最近100条寻访进行分组
+        // 对最近一次官网的寻访记录数据进行分组
         Map<Integer, List<GaChaInfo>> gaChaGroup = value.stream().collect(Collectors.groupingBy(GaChaInfo::getRarity));
         // 统计六星，五星数量以及按卡池分组
         List<GaChaInfo> topOperatorList = gaChaGroup.get(6);
@@ -596,7 +596,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         g.setColor(new Color(70, 130, 180));
         g.drawString(part2, 0, 50 + 50 * length);
         length++;
-        g.drawString("最近100次寻访的六星五星记录", 0, 50 + 50 * length);
+        g.drawString("最近一次官网可查寻访的六星五星记录", 0, 50 + 50 * length);
         length++;
         String isNew = "";
 

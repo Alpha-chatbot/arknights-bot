@@ -6,7 +6,6 @@
         FROM gacha_info
         WHERE process_id = #{processId}
         ORDER BY ts DESC
-        limit 100
     </select>
 
 
