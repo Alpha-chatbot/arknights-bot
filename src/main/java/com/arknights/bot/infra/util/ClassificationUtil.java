@@ -28,7 +28,7 @@ public class ClassificationUtil {
         /**
          * 新增内容:获取粥的官网查询token教程
          */
-        map.put("token获取教程", TokenHelp);
+        map.put("token教程", TokenHelp);
 
         map.put("菜单", CaiDan);
         map.put("功能", CaiDan);

@@ -162,8 +162,6 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                             TOKEN_B_URL + "\n" +
                             "3.复制第2步页面内所有文本内容，添加 #token录入 格式后发送，例如:\n" +
                             "#token录入{\"code\":0,\"data\":{\"content\":\"IkoEX4GFG/Yr1CRGFR1gm7kG\"},\"msg\":\"\"}";
-
-                    break;
                 }
                 resultType = Constance.TYPE_JUST_TEXT;
                 break;
