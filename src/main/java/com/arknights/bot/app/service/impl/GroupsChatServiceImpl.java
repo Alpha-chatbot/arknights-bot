@@ -144,15 +144,15 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         switch (c) {
             case CaiDan:
                 result = "这里是W测试版初号机1.1\n" +
-                        "0.获取token方法: #token获取教程\n" +
-                        "1.token录入方法: #token录入{你的token}，例如 #token录入a7JD8jDdi9spp\n" +
+                        "0.获取token方法: #token教程\n" +
+                        "1.token录入方法: #token录入{你的token}，例如 #token录入{\"code:0xxxx\n" +
                         "2.寻访查询：#寻访查询\n" +
                         "3.干员技能查询: 例如 #技能 艾雅法拉";
                 resultType = Constance.TYPE_JUST_TEXT;
                 break;
             case TokenHelp:
                 // token获取教程
-                if (StringUtils.isEmpty(text)) {
+                if (StringUtils.isNotEmpty(text)) {
                     result = "1.浏览器登录鹰角官网:" + "\n" +
                             AK_URL + "\n" +
                             "2.复制下面链接到浏览器打开:" + "\n" +
