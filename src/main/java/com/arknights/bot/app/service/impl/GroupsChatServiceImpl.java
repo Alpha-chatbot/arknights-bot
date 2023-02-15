@@ -553,7 +553,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         g.drawString(top, 0, 50);
         // 黑色
         g.setColor(Color.BLACK);
-        g.drawString("寻访查询范围是30日内的100条记录", 0, 100);
+        g.drawString("查询范围是30日内的官网可查100条记录<10连算一条>", 0, 100);
 
         // part1
         //     * [卡池统计]

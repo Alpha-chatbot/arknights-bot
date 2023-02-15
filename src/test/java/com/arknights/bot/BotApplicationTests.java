@@ -38,6 +38,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.arknights.bot.infra.util.DesUtil.getDecryptString;
+
 // @RunWith(SpringRunner.class)
 @Slf4j
 @SpringBootTest
@@ -618,6 +620,20 @@ public class BotApplicationTests {
             }
         });
 
+
+    }
+
+    @Test
+    public void tokenDes(){
+        String token = "A0Rz0B1B/BMmKkpOUMiciyhf+/jNs=";
+        if (StringUtils.isNotBlank(token)) {
+            try {
+                token = getDecryptString(token);
+                System.out.println(token);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
     }
 
