@@ -62,4 +62,5 @@ public interface Constance {
     String OPERATOR_START_LOCAL = "特种";
     String OPERATOR_END_LOCAL = "取自";
 
+    String ZERO = "0";
 }

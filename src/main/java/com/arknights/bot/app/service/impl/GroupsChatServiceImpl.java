@@ -62,6 +62,9 @@ public class GroupsChatServiceImpl implements GroupsChatService {
     private SendMsgUtil sendMsgUtil;
 
     private final Map<Long, List<Long>> qqMsgRateList = new HashMap<>();
+    private static final String AK_URL = "https://ak.hypergryph.com";
+    private static final String TOKEN_URL = "https://web-api.hypergryph.com/account/info/hg";
+    private static final String TOKEN_B_URL = "https://web-api.hypergryph.com/account/info/ak-b";
 
 
     @Override
@@ -149,30 +152,36 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 break;
             case TokenHelp:
                 // token获取教程
-                try {
-                    // resource获取图片,并InputStream转为BufferedImage,再转为url调用OPQ的api
-                    ClassPathResource resource = new ClassPathResource("pic/demo.jpg");
-                    InputStream inputStream = resource.getInputStream();
-                    BufferedImage image = ImageIO.read(inputStream);
-                    result = replaceEnter(new BASE64Encoder().encode(TextToImageUtil.imageToBytes(image)));
-                    resultType = Constance.TYPE_JUST_IMG;
-                    attachContent = Constance.TOKEN_DEMO;
+                if (StringUtils.isEmpty(text)) {
+                    result = "1.浏览器登录鹰角官网:" + "\n" +
+                            AK_URL + "\n" +
+                            "2.复制下面链接到浏览器打开:" + "\n" +
+                            "官服:" + "\n" +
+                            TOKEN_URL + "\n" +
+                            "B服:" + "\n" +
+                            TOKEN_B_URL + "\n" +
+                            "3.复制第2步页面内所有文本内容，添加 #token录入 格式后发送，例如:\n" +
+                            "#token录入{\"code\":0,\"data\":{\"content\":\"IkoEX4GFG/Yr1CRGFR1gm7kG\"},\"msg\":\"\"}";
+
                     break;
-                } catch (Exception e) {
-                    log.info("获取demo图片异常{}", e);
-                    result = "...获取教程异常，请稍后再试";
-                    resultType = Constance.TYPE_JUST_TEXT;
                 }
+                resultType = Constance.TYPE_JUST_TEXT;
                 break;
             case TokenInsert:
                 if (StringUtils.isEmpty(text)) {
-                    result = "token不能为空，输入格式为 #token录入xxxxx，xxxxx为你的token";
+                    result = "token不能为空，输入格式为 #token录入xxxxx，xxxxx为浏览器复制的内容";
                     break;
                 }
-                // 对token加密
-                String encryptString = getEncryptString(text);
-                // token信息插入或更新
-                result = insertOrUpdateToken(encryptString, qq);
+                // 对tokenJson解析
+                String content = jsonHandler(text);
+                if(StringUtils.isEmpty(content)){
+                    result = "token格式异常";
+                } else {
+                    // token进行加密
+                    String encryptString = getEncryptString(text);
+                    // token信息插入或更新
+                    result = insertOrUpdateToken(encryptString, qq);
+                }
                 resultType = Constance.TYPE_JUST_TEXT;
                 break;
             case GaCha:
@@ -878,7 +887,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             g.setColor(Color.BLACK);
             g.setFont(font);
             // 三技能有时较长，需要三行
-            i = i-4;
+            i = i - 4;
             cellHeight = 82;
             g.drawString("等级", 30, i * cellHeight);
             g.drawString("描述", 150, i * cellHeight);
@@ -889,7 +898,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 // 绘制线段(单元格)
                 // drawdrawLine(x1, y1, x2, y2) 分别代表第一个点的x,y 坐标和 第二个点的x, y坐标
                 g.setColor(Color.GRAY);
-                g.drawLine(0, i * cellHeight + 5 , tableWeight, i * cellHeight + 5 );
+                g.drawLine(0, i * cellHeight + 5, tableWeight, i * cellHeight + 5);
 
                 Long sk = skillLevelInfo.getSkillLevel();
                 String skillLevel = "";
@@ -923,12 +932,27 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             }
             // 闭合线
             g.setColor(Color.GRAY);
-            g.drawLine(0, i * cellHeight + 5 , tableWeight, i * cellHeight + 5 );
+            g.drawLine(0, i * cellHeight + 5, tableWeight, i * cellHeight + 5);
         }
 
         g.dispose();
 
         return image;
+    }
+
+    String jsonHandler(String tokenJson){
+        com.alibaba.fastjson.JSONObject parse = (com.alibaba.fastjson.JSONObject) com.alibaba.fastjson.JSONObject.parse(tokenJson);
+        String code = parse.getString("code");
+        if(!Constance.ZERO.equals(code)){
+            return null;
+        }
+        com.alibaba.fastjson.JSONObject data = parse.getJSONObject("data");
+        String tokenContent = data.getString("content");
+        if(StringUtils.isEmpty(tokenContent)){
+            return null;
+        }
+        log.info("tokenJson解析完成");
+        return tokenContent;
     }
 
 }
