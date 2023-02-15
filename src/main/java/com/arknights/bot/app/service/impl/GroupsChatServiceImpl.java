@@ -176,7 +176,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                     result = "token格式异常";
                 } else {
                     // token进行加密
-                    String encryptString = getEncryptString(text);
+                    String encryptString = getEncryptString(content);
                     // token信息插入或更新
                     result = insertOrUpdateToken(encryptString, qq);
                 }

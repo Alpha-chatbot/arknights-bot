@@ -625,7 +625,8 @@ public class BotApplicationTests {
 
     @Test
     public void tokenDes(){
-        String token = "A0Rz0B1B/BMmKkpOUMiciyhf+/jNs=";
+        String token = "6m2yZ+4Qr3l0tGGzdb94gWxKLM1cIZGf0Jxmhq1harHUxr0R2MH/Dt4XC02S0o88ABDHnpEFrsGj\n" +
+                "y4metCHWy36guhEe/CHm";
         if (StringUtils.isNotBlank(token)) {
             try {
                 token = getDecryptString(token);
