@@ -23,4 +23,9 @@ public interface GaChaInfoMapper {
      * @return
      */
     List<GaChaInfo> selectGaChaByProcessId(Long processId);
+
+    /**
+     * 清理寻访数据
+     */
+    void cleanGaChaInfo();
 }

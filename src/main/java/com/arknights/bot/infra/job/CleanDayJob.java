@@ -31,7 +31,7 @@ public class CleanDayJob {
     /**
      * 每周日下午五点提示剿灭结算
      */
-    @Scheduled(cron = "${scheduled.cleanJob}")
+    @Scheduled(cron = "${scheduled.gameCleanJob}")
     @Async
     public void cleanDayJob() {
         List<Long> groups = userFoundMapper.selectAllGroups();

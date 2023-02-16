@@ -27,4 +27,8 @@
                #{processId})
     </insert>
 
+    <update id="cleanGaChaInfo">
+        truncate table gacha_info;
+    </update>
+
 </mapper>
