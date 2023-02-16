@@ -24,8 +24,7 @@
                 #{rarity},
                 #{isNew},
                 #{qq},
-               #{processId}) on DUPLICATE KEY UPDATE
-            process_id = #{processId}
+               #{processId})
     </insert>
 
 </mapper>

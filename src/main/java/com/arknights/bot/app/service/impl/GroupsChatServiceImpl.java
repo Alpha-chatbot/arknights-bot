@@ -518,14 +518,20 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         int seniorOperatorCounts = 0;
         // 当前卡池寻访数
         int poolGaChaCounts = 0;
+        // 当次官网查询记录所获寻访次数(十连按10次算)
+        int counts = value.size();;
 
         // 对最近一次官网的寻访记录数据进行分组
         Map<Integer, List<GaChaInfo>> gaChaGroup = value.stream().collect(Collectors.groupingBy(GaChaInfo::getRarity));
-        // 统计六星，五星数量以及按卡池分组
+        // 统计各星级数量以及按卡池分组
         List<GaChaInfo> topOperatorList = gaChaGroup.get(6);
         List<GaChaInfo> seniorOperatorList = gaChaGroup.get(5);
+        List<GaChaInfo> fourStarOperatorList = gaChaGroup.get(4);
+        List<GaChaInfo> threeStarOperatorList = gaChaGroup.get(3);
         log.info("六星干员数量{}", topOperatorList);
         log.info("五星干员数量{}", seniorOperatorList);
+        log.info("四星干员数量{}", fourStarOperatorList);
+        log.info("三星干员数量{}", threeStarOperatorList);
 
         Map<String, List<GaChaInfo>> gaChaInfoPoolsMap;
         if (!CollectionUtils.isEmpty(topOperatorList)) {
@@ -568,7 +574,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         //     * xx池   xx发 六星数量，五星数量
         // 铁青色
         g.setColor(new Color(70, 130, 180));
-        g.drawString(part1, 0, 150);
+        g.drawString(part1 + "共计" + counts +"抽", 0, 155);
         length = 4;
         g.setColor(Color.BLACK);
         for (Map.Entry<String, List<GaChaInfo>> item : gaChaInfoPoolsMap.entrySet()) {
@@ -580,6 +586,8 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             // 单个卡池五六星干员统计
             List<GaChaInfo> topList = gaChaInfoList.stream().filter(e -> e.getRarity() == 6).collect(Collectors.toList());
             List<GaChaInfo> seniorList = gaChaInfoList.stream().filter(e -> e.getRarity() == 5).collect(Collectors.toList());
+            List<GaChaInfo> fourStarList = gaChaInfoList.stream().filter(e -> e.getRarity() == 4).collect(Collectors.toList());
+            List<GaChaInfo> threeStarList = gaChaInfoList.stream().filter(e -> e.getRarity() == 3).collect(Collectors.toList());
 
             if (CollectionUtils.isEmpty(topList)) {
                 topOperatorCounts = 0;
@@ -594,7 +602,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
 
             g.drawString("   " + "[卡池" + poolName + "]共寻访" + poolGaChaCounts + "次", 0, 50 + 50 * length);
             length++;
-            g.drawString("  六星数量:" + topOperatorCounts + "  五星数量:" + seniorOperatorCounts, 0, 50 + 50 * length);
+            g.drawString("  六星:" + topOperatorCounts + "  五星:" + seniorOperatorCounts + "  四星:" + fourStarList + "  三星:" + threeStarList, 0, 50 + 50 * length);
             length++;
         }
 
@@ -603,7 +611,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         g.setColor(new Color(70, 130, 180));
         g.drawString(part2, 0, 50 + 50 * length);
         length++;
-        g.drawString("最近一次官网可查寻访的六星五星记录", 0, 50 + 50 * length);
+        g.drawString("最新官网可查寻访的出货记录", 0, 50 + 50 * length);
         length++;
         String isNew = "";
 
