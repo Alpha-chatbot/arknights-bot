@@ -1,10 +1,10 @@
 -- 创建数据库
 CREATE DATABASE arknights;
 -- 建表
--- qq 映射表
+-- 账户信息表
 CREATE TABLE `account_info` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `token` varchar(250) DEFAULT NULL,
+  `token` varchar(1200) DEFAULT NULL,
   `qq` bigint DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `account_info_uk` (`qq`)
