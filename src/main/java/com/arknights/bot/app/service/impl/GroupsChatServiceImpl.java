@@ -597,6 +597,11 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             } else {
                 topOperatorCounts = topList.size();
             }
+            if (CollectionUtils.isEmpty(seniorList)) {
+                seniorOperatorCounts = 0;
+            } else {
+                seniorOperatorCounts = seniorList.size();
+            }
             if (CollectionUtils.isEmpty(fourStarList)) {
                 fourStarOperatorCounts = 0;
             } else {
