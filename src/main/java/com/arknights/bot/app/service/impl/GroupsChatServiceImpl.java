@@ -189,7 +189,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 if (StringUtils.isNotBlank(token)) {
                     String info = gaChaInfoService.gaChaQueryByPage(1, token, qq);
                     if (StringUtils.isEmpty(info)) {
-                        result = "当前token无法获取官网信息，请尝试录入新token";
+                        result = "当前token无法获取官网信息，请尝试录入新token或切换浏览器";
                     } else {
                         result = info;
                     }

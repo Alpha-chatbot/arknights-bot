@@ -9,8 +9,10 @@ import com.arknights.bot.app.service.GaChaInfoService;
 import com.arknights.bot.domain.entity.GaChaInfo;
 import com.arknights.bot.domain.entity.PageRequest;
 import com.arknights.bot.infra.constant.Constance;
+import com.arknights.bot.infra.constant.UserAgentConstance;
 import com.arknights.bot.infra.mapper.GaChaInfoMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
@@ -53,9 +55,15 @@ public class GaChaInfoServiceImpl implements GaChaInfoService {
     public String gaChaQueryByPage(int page, String token, Long qq) {
         // https://ak.hypergryph.com/user/api/inquiry/gacha?page=1&token=l8jK5JGHe8SN25PI91kgc7xb&channelId=1
         String firstPage = URL + "?page=1" + "&token=" + token + "&channelId=1";
-        String firstContent = sendGet(firstPage);
+        // 判断符合请求的代理客户端
+        String userAgent = testConn(firstPage);
+        if (StringUtils.isEmpty(userAgent)) {
+            return null;
+        }
+        String firstContent = sendGet(firstPage, userAgent);
 
         log.info("get首次请求返回内容{}", firstContent);
+
         // json处理
         List<PoolsInfoDto> poolsInfoDtoList = json2Entity(firstContent);
         if (CollectionUtils.isEmpty(poolsInfoDtoList)) {
@@ -74,7 +82,7 @@ public class GaChaInfoServiceImpl implements GaChaInfoService {
                 log.info("第{}页内容", counts);
                 String url = URL + "?page=" + counts + "&token=" + token + "&channelId=1";
                 log.info("url:{}", url);
-                String content = sendGet(url);
+                String content = sendGet(url, userAgent);
                 List<PoolsInfoDto> resultList = json2Entity(content);
                 if (!CollectionUtils.isEmpty(resultList)) {
                     poolsInfoDtoList.addAll(resultList);
@@ -153,7 +161,7 @@ public class GaChaInfoServiceImpl implements GaChaInfoService {
      * @param url
      * @return
      */
-    public String sendGet(String url) {
+    public String sendGet(String url, String userAgent) {
         //1.生成httpclient，相当于该打开一个浏览器
         CloseableHttpClient httpClient = HttpClients.createDefault();
         //设置请求和传输超时时间
@@ -163,7 +171,7 @@ public class GaChaInfoServiceImpl implements GaChaInfoService {
         //2.创建get请求，相当于在浏览器地址栏输入 网址
         HttpGet request = new HttpGet(url);
         try {
-            request.setHeader("User-Agent", USER_AGENT);
+            request.setHeader("User-Agent", userAgent);
             request.setConfig(requestConfig);
             //3.执行get请求，相当于在输入地址栏后敲回车键
             response = httpClient.execute(request);
@@ -218,14 +226,14 @@ public class GaChaInfoServiceImpl implements GaChaInfoService {
             String gachaTime;
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             //将时间戳转换为时间
-            Date date = new Date(secondTs*1000L);
+            Date date = new Date(secondTs * 1000L);
             //将时间调整为yyyy-MM-dd HH:mm:ss时间样式
             gachaTime = simpleDateFormat.format(date);
             poolsInfoDto.setGachaTime(gachaTime);
 
             // 添加分页信息
             poolsInfoDto.setPageRequest(pageRequest);
-            log.info("当前页第{}条的poolsInfo:{}", i+1 ,poolsInfoDto);
+            log.info("当前页第{}条的poolsInfo:{}", i + 1, poolsInfoDto);
             poolsInfoDtoList.add(poolsInfoDto);
         }
 
@@ -236,4 +244,54 @@ public class GaChaInfoServiceImpl implements GaChaInfoService {
         Calendar now = Calendar.getInstance();
         return now.getTime().getTime();
     }
+
+    public String testConn(String firstPage) {
+
+        // 默认先用谷歌
+        String agent = UserAgentConstance.GOOGLE_BROWSER;
+        String firstContent = sendGet(firstPage, agent);
+        // 错误返回例子: {"code":3000,"msg":"登录失效"}
+        JSONObject jsonObject = JSON.parseObject(firstContent);
+        //获得code字段,不为0一般都是请求失败
+        String code = jsonObject.getString("code");
+        if (!Constance.ZERO.equals(code)) {
+            for (int i = 0; i < 6; i++) {
+
+                if (i == 0) {
+                    agent = UserAgentConstance.QQ_BROWSER;
+                    firstContent = sendGet(firstPage, agent);
+                } else if (i == 1) {
+                    agent = UserAgentConstance.FOX_BROWSER;
+                    firstContent = sendGet(firstPage, agent);
+                } else if (i == 2) {
+                    agent = UserAgentConstance.EDGE_BROWSER;
+                    firstContent = sendGet(firstPage, agent);
+                } else if (i == 3) {
+                    agent = UserAgentConstance.SG_BROWSER;
+                    firstContent = sendGet(firstPage, agent);
+                } else if (i == 4) {
+                    agent = UserAgentConstance.N360_BROWSER;
+                    firstContent = sendGet(firstPage, agent);
+                } else {
+                    agent = UserAgentConstance.LBB_BROWSER;
+                    firstContent = sendGet(firstPage, agent);
+                }
+                jsonObject = JSON.parseObject(firstContent);
+                //获得code字段
+                code = jsonObject.getString("code");
+                log.info("get首次请求返回内容{}", firstContent);
+                log.info("当前代理为{}, 返回code为{}", agent, code);
+                if (Constance.ZERO.equals(code)) {
+                    log.info("当前符合条件代理浏览器为{}", agent);
+                    break;
+                }
+            }
+            if (!Constance.ZERO.equals(code)) {
+                return null;
+            }
+        }
+
+        return agent;
+    }
+
 }
