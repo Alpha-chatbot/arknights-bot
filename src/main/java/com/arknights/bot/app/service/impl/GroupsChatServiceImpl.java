@@ -516,6 +516,9 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         int topOperatorCounts = 0;
         // 寻访内五星干员总数
         int seniorOperatorCounts = 0;
+
+        int fourStarOperatorCounts = 0;
+        int threeStarOperatorCounts = 0;
         // 当前卡池寻访数
         int poolGaChaCounts = 0;
         // 当次官网查询记录所获寻访次数(十连按10次算)
@@ -550,7 +553,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         log.info("height:{}", height);
 
         int length = 0;
-        BufferedImage image = new BufferedImage(1250, (height + 1) * 50 + 10, BufferedImage.TYPE_INT_BGR);
+        BufferedImage image = new BufferedImage(1250, (height + 1) * 40, BufferedImage.TYPE_INT_BGR);
         Font font = new Font("楷体", Font.BOLD, 50);
         Graphics g = image.getGraphics();
         // 先用白色填充整张图片,也就是背景
@@ -594,15 +597,20 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             } else {
                 topOperatorCounts = topList.size();
             }
-            if (CollectionUtils.isEmpty(seniorList)) {
-                seniorOperatorCounts = 0;
+            if (CollectionUtils.isEmpty(fourStarList)) {
+                fourStarOperatorCounts = 0;
             } else {
-                seniorOperatorCounts = seniorList.size();
+                fourStarOperatorCounts = fourStarList.size();
+            }
+            if (CollectionUtils.isEmpty(threeStarList)) {
+                threeStarOperatorCounts = 0;
+            } else {
+                threeStarOperatorCounts = threeStarList.size();
             }
 
-            g.drawString("   " + "[卡池" + poolName + "]共寻访" + poolGaChaCounts + "次", 0, 50 + 50 * length);
+            g.drawString("  " + "[卡池" + poolName + "]共寻访" + poolGaChaCounts + "次", 0, 50 + 50 * length);
             length++;
-            g.drawString("  六星:" + topOperatorCounts + "  五星:" + seniorOperatorCounts + "  四星:" + fourStarList + "  三星:" + threeStarList, 0, 50 + 50 * length);
+            g.drawString("  六星:" + topOperatorCounts + "  五星:" + seniorOperatorCounts + "  四星:" + fourStarOperatorCounts + "  三星:" + threeStarOperatorCounts, 0, 50 + 50 * length);
             length++;
         }
 
