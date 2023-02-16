@@ -376,10 +376,10 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 result = "";
                 eventData = new JSONObject(message.getEventData());
                 groupsChatService.sendMessage(groupId, eventData.getLong("UserID"),
-                        "谁刚刚撤回了消息,让我看看!!");
+                        "刚刚有人说请客,但是撤回了");
                 break;
             default:
-                result = "";
+                result = "其他事件";
         }
     }
 
