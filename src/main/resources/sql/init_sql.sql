@@ -30,8 +30,7 @@ CREATE TABLE `gacha_info` (
                               `process_id` bigint DEFAULT NULL COMMENT '批次号',
                               `qq` bigint DEFAULT NULL,
                               `gacha_time` varchar(80) DEFAULT NULL COMMENT '寻访时间',
-                              PRIMARY KEY (`id`),
-                              UNIQUE KEY `gacha_uk` (`ts`)
+                              PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3689 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
 
