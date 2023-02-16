@@ -16,6 +16,8 @@ public class PoolsInfoDto {
     private Long ts;
     @ApiModelProperty(value = "卡池名")
     private String pool;
+    @ApiModelProperty(value = "寻访时间")
+    private String gachaTime;
     @ApiModelProperty(value = "寻访干员列表，若十连则列表中会有10条，单抽则只有一条")
     private List<EmployeesDto> chars;
 

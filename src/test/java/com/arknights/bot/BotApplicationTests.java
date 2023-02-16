@@ -32,6 +32,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.io.*;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -64,9 +65,24 @@ public class BotApplicationTests {
      */
     @Test
     public void testTs() {
-        // convertToTimestamp();
-        conversionTime("1674440758");
-        System.out.println(48 / 10);
+
+
+        // 1676385685
+        // 1676513138741
+        // 测试获取当前的秒级时间戳
+        long currentTimeSec = System.currentTimeMillis()/1000L;
+        System.out.println("当前为10位秒级时间戳"+currentTimeSec);
+
+        // 鹰角的是10位秒级时间戳
+        Long second = 1676385685L;
+        String res;
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        //将时间戳转换为时间
+        Date date = new Date(second*1000L);
+        //将时间调整为yyyy-MM-dd HH:mm:ss时间样式
+        res = simpleDateFormat.format(date);
+        System.out.println(res);
+
     }
 
     public void convertToTimestamp(String time) {
@@ -287,7 +303,7 @@ public class BotApplicationTests {
         }
 
         // demo 临时测试
-        for(String line : strArray){
+        for (String line : strArray) {
             System.out.println("=====");
             System.out.println(line);
         }
@@ -496,12 +512,12 @@ public class BotApplicationTests {
         log.info("当前:{}", result);
         String value = "3.0";
         float v = Float.parseFloat(value);
-        v = v*100;
+        v = v * 100;
 
-        log.info("当前v:{}", (long)v);
+        log.info("当前v:{}", (long) v);
         // 在这里处理百分号转换问题，比如现在格式是 攻击力+0.40% ,替换为 40%
         String regexPercent = "[0-9][.][0-9]{1,2}0%";
-        result = result.replaceAll(regexPercent, String.valueOf((long)v)+"%");
+        result = result.replaceAll(regexPercent, String.valueOf((long) v) + "%");
         // result = result.replace("heal_scale", "0.6");
         // <$ba.dt.element>
 
@@ -513,11 +529,11 @@ public class BotApplicationTests {
     }
 
     //把一个文件中的内容读取成一个String字符串
-    public static String getStr(File jsonFile){
+    public static String getStr(File jsonFile) {
         String jsonStr = "";
         try {
             FileReader fileReader = new FileReader(jsonFile);
-            Reader reader = new InputStreamReader(new FileInputStream(jsonFile),"utf-8");
+            Reader reader = new InputStreamReader(new FileInputStream(jsonFile), "utf-8");
             int ch = 0;
             StringBuffer sb = new StringBuffer();
             while ((ch = reader.read()) != -1) {
@@ -535,7 +551,7 @@ public class BotApplicationTests {
 
 
     @Test
-    public void zoeTestt(){
+    public void zoeTestt() {
         String uploadFileSavePath = "F:\\backup";
         // String uploadFileSavePath = FILE_PATH_PREFIX;
         // character_table.json  skill_table.json
@@ -546,7 +562,7 @@ public class BotApplicationTests {
         //通过上面那个方法获取json文件的内容
         String jsonData = getStr(jsonFile);
         //转json对象
-        JSONObject parse = (JSONObject)JSONObject.parse(jsonData);
+        JSONObject parse = (JSONObject) JSONObject.parse(jsonData);
         //获取主要数据
         //遍历key和value
         int i = 0;
@@ -554,7 +570,7 @@ public class BotApplicationTests {
             // log.info("这条JSON的Key是："+entry.getKey());
             // log.info("这条JSON的Value是："+ entry.getValue());
             String key = entry.getKey();
-            JSONObject valueObject =(JSONObject)entry.getValue();
+            JSONObject valueObject = (JSONObject) entry.getValue();
             // 干员中文名称
             String zh_name = valueObject.getString("name");
             // 干员英文名
@@ -565,7 +581,7 @@ public class BotApplicationTests {
             String itemUsage = valueObject.getString("itemUsage");
             // 潜能物id，这里用于排除道具类的数据
             String potentialItemId = valueObject.getString("potentialItemId");
-            if(StringUtils.isBlank(potentialItemId)){
+            if (StringUtils.isBlank(potentialItemId)) {
                 continue;
             }
 
@@ -592,7 +608,7 @@ public class BotApplicationTests {
     }
 
     @Test
-    public void parseTest(){
+    public void parseTest() {
         String duration = "-1.0";
         float l = Float.parseFloat(duration);
         if (l < 0) {
@@ -605,17 +621,17 @@ public class BotApplicationTests {
         log.info("输出：{}", ss);
 
 
-        List<String> listTest = Arrays.asList("111", "2", "3333", "44") ;
+        List<String> listTest = Arrays.asList("111", "2", "3333", "44");
         listTest.sort((o1, o2) -> {
-            if(o1.length() > o2.length()){
+            if (o1.length() > o2.length()) {
 
                 //这里注意，比较o1与o2的大小，若o1 大于 o2 默认会返回 1
                 //但是sort排序，默认的是升序排序，所以重写的时候将值改写返回-1，就会变成倒叙排序
 
                 return -1;
-            }else if(o1.length() == o2.length()){
+            } else if (o1.length() == o2.length()) {
                 return 0;
-            }else {
+            } else {
                 return 1;
             }
         });
@@ -624,9 +640,8 @@ public class BotApplicationTests {
     }
 
     @Test
-    public void tokenDes(){
-        String token = "6m2yZ+4Qr3l0tGGzdb94gWxKLM1cIZGf0Jxmhq1harHUxr0R2MH/Dt4XC02S0o88ABDHnpEFrsGj\n" +
-                "y4metCHWy36guhEe/CHm";
+    public void tokenDes() {
+        String token = "MwDfbd00I7yhBTiWMnaT//jNs=";
         if (StringUtils.isNotBlank(token)) {
             try {
                 token = getDecryptString(token);

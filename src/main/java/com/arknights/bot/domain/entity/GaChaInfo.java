@@ -27,4 +27,6 @@ public class GaChaInfo {
     private Long qq;
     @ApiModelProperty(value = "批次号")
     private Long processId;
+    @ApiModelProperty(value = "寻访时间")
+    private String gachaTime;
 }

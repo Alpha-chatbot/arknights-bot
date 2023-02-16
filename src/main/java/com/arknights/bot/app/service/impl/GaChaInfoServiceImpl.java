@@ -25,6 +25,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -104,6 +105,7 @@ public class GaChaInfoServiceImpl implements GaChaInfoService {
         for (PoolsInfoDto item : poolsInfoDtos) {
             Long ts = item.getTs();
             String pool = item.getPool();
+            String gachaTime = item.getGachaTime();
             // 单抽
             if (item.getChars().size() == 1) {
                 GaChaInfo gaChaInfo = new GaChaInfo();
@@ -115,9 +117,10 @@ public class GaChaInfoServiceImpl implements GaChaInfoService {
                 gaChaInfo.setPool(pool);
                 gaChaInfo.setProcessId(processId);
                 gaChaInfo.setQq(qq);
+                gaChaInfo.setGachaTime(gachaTime);
                 gaChaInfoList.add(gaChaInfo);
             } else if (item.getChars().size() > 1) {
-                // 十连寻访,这里入参ts都是相同的，只能手动变动
+                // 十连寻访,这里入参ts都是相同的，只能手动变动,寻访时间字段相同
                 log.info("十连寻访:{}", item.getChars());
                 List<EmployeesDto> chars = item.getChars();
                 GaChaInfo gaChaInfo;
@@ -130,6 +133,7 @@ public class GaChaInfoServiceImpl implements GaChaInfoService {
                     gaChaInfo.setPool(pool);
                     gaChaInfo.setProcessId(processId);
                     gaChaInfo.setQq(qq);
+                    gaChaInfo.setGachaTime(gachaTime);
                     gaChaInfoList.add(gaChaInfo);
                 }
                 chars.clear();
@@ -170,8 +174,8 @@ public class GaChaInfoServiceImpl implements GaChaInfoService {
                 html = EntityUtils.toString(httpEntity, "UTF-8");
             } else {
                 //如果返回状态不是200，比如404（页面不存在）等，根据情况做处理，这里略
-                System.out.println("返回状态不是200");
-                System.out.println(EntityUtils.toString(response.getEntity(), "utf-8"));
+                log.info("返回状态不是200");
+                log.info(EntityUtils.toString(response.getEntity(), "utf-8"));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -209,6 +213,16 @@ public class GaChaInfoServiceImpl implements GaChaInfoService {
             JSONObject job = array.getJSONObject(i);
             // json转为卡池实体类
             PoolsInfoDto poolsInfoDto = JSON.toJavaObject(job, PoolsInfoDto.class);
+            // 时间戳转换, 鹰角的是10位秒级时间戳
+            Long secondTs = poolsInfoDto.getTs();
+            String gachaTime;
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            //将时间戳转换为时间
+            Date date = new Date(secondTs*1000L);
+            //将时间调整为yyyy-MM-dd HH:mm:ss时间样式
+            gachaTime = simpleDateFormat.format(date);
+            poolsInfoDto.setGachaTime(gachaTime);
+
             // 添加分页信息
             poolsInfoDto.setPageRequest(pageRequest);
             log.info("当前页第{}条的poolsInfo:{}", i+1 ,poolsInfoDto);

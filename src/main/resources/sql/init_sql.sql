@@ -21,17 +21,18 @@ CREATE TABLE `a_group_admin` (
 
 -- 卡池寻访表
 CREATE TABLE `gacha_info` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `operators_name` varchar(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '干员名称',
-  `ts` bigint NOT NULL COMMENT '唯一性时间戳',
-  `pool` varchar(80) DEFAULT NULL COMMENT '卡池名称',
-  `rarity` tinyint DEFAULT NULL,
-  `is_new` tinyint(1) DEFAULT '0' COMMENT '是否新获取',
-  `process_id` bigint DEFAULT NULL COMMENT '批次号',
-  `qq` bigint DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `gacha_uk` (`ts`)
-) ENGINE=InnoDB AUTO_INCREMENT=2681 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+                              `id` int NOT NULL AUTO_INCREMENT,
+                              `operators_name` varchar(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '干员名称',
+                              `ts` bigint NOT NULL COMMENT '唯一性时间戳',
+                              `pool` varchar(80) DEFAULT NULL COMMENT '卡池名称',
+                              `rarity` tinyint DEFAULT NULL,
+                              `is_new` tinyint(1) DEFAULT '0' COMMENT '是否新获取',
+                              `process_id` bigint DEFAULT NULL COMMENT '批次号',
+                              `qq` bigint DEFAULT NULL,
+                              `gacha_time` varchar(80) DEFAULT NULL COMMENT '寻访时间',
+                              PRIMARY KEY (`id`),
+                              UNIQUE KEY `gacha_uk` (`ts`)
+) ENGINE=InnoDB AUTO_INCREMENT=3689 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
 
 -- 干员信息表
