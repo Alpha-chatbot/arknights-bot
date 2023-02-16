@@ -16,19 +16,19 @@
                                 rarity,
                                 is_new,
                                 qq,
-                                process_id
-        )
+                                process_id,
+                                gacha_time)
         VALUES (#{ts},
                 #{operatorsName},
                 #{pool},
                 #{rarity},
                 #{isNew},
                 #{qq},
-               #{processId})
+                #{processId},
+                #{gachaTime})
     </insert>
 
     <update id="cleanGaChaInfo">
         truncate table gacha_info;
     </update>
-
 </mapper>
