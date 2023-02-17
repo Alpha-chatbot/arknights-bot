@@ -59,10 +59,19 @@ public class GroupsChatController {
         log.info("--------------------------服务端信息-----------------------------");
         SystemUtil.dumpSystemInfo();
         log.info("--------------------------客户端信息-----------------------------");
+        log.info("未格式化信息{}:", request.getHeader(Header.USER_AGENT.toString()));
         UserAgent ua = UserAgentUtil.parse(request.getHeader(Header.USER_AGENT.toString()));
         log.info(ua.getPlatform().toString());
         log.info(JSONUtil.toJsonStr(ua));
         log.info("-------------------------Over----------------------------------");
+        // Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36
+        /**
+         * 格式化信息
+         * {"mobile":false,"browser":{"name":"Chrome","pattern":"chrome"},
+         * "version":"109.0.0.0","platform":{"name":"Windows","pattern":"windows"},
+         * "os":{"name":"Windows 10 or Windows Server 2016","pattern":"windows nt 10\\.0"},
+         * "osVersion":"10.0","engine":{"name":"Webkit","pattern":"webkit"},"engineVersion":"537.36"}
+         */
     }
 
 
