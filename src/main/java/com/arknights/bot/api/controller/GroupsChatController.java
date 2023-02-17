@@ -54,7 +54,7 @@ public class GroupsChatController {
      * 测试获取客户端（浏览器信息）
      * @param request
      */
-    @GetMapping("print")
+    @GetMapping("/print")
     public void toPrintAgentInfo(HttpServletRequest request){
         log.info("--------------------------服务端信息-----------------------------");
         SystemUtil.dumpSystemInfo();
