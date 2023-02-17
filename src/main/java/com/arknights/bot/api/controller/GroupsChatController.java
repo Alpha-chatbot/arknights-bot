@@ -1,14 +1,18 @@
 package com.arknights.bot.api.controller;
 
+import cn.hutool.http.Header;
+import cn.hutool.http.useragent.UserAgent;
+import cn.hutool.http.useragent.UserAgentUtil;
+import cn.hutool.json.JSONUtil;
+import cn.hutool.system.SystemUtil;
 import com.arknights.bot.app.service.GroupsChatService;
 import com.arknights.bot.domain.entity.GroupsEventInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Bot群聊调用功能相关
@@ -45,5 +49,21 @@ public class GroupsChatController {
     ) {
         groupsChatService.eventMessageHandler(message);
     }
+
+    /**
+     * 测试获取客户端（浏览器信息）
+     * @param request
+     */
+    @GetMapping("print")
+    public void toPrintAgentInfo(HttpServletRequest request){
+        log.info("--------------------------服务端信息-----------------------------");
+        SystemUtil.dumpSystemInfo();
+        log.info("--------------------------客户端信息-----------------------------");
+        UserAgent ua = UserAgentUtil.parse(request.getHeader(Header.USER_AGENT.toString()));
+        log.info(ua.getPlatform().toString());
+        log.info(JSONUtil.toJsonStr(ua));
+        log.info("-------------------------Over----------------------------------");
+    }
+
 
 }
