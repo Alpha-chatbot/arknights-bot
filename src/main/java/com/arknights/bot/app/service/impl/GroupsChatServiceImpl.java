@@ -67,6 +67,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
     private RandomMessageUtil randomMessageUtil;
 
     private final Map<Long, List<Long>> qqMsgRateList = new HashMap<>();
+    private final Map<Long, List<Long>> qqRevokeMsgRateList = new HashMap<>();
     private static final String AK_URL = "https://ak.hypergryph.com";
     private static final String TOKEN_URL = "https://web-api.hypergryph.com/account/info/hg";
     private static final String TOKEN_B_URL = "https://web-api.hypergryph.com/account/info/ak-b";
@@ -310,6 +311,48 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         return flag;
     }
 
+    /**
+     * 对于有些喜欢撤回的群友限定一分钟内只记录一次
+     * @param qq
+     * @param groupId
+     * @param name
+     * @return
+     */
+    boolean getMsgLimitForRevoke(Long qq, Long groupId, String name) {
+        boolean flag = true;
+        // 同一qq号每60秒限制只记录一条(这里只考虑同一群聊内)
+        int length = 1;
+        int second = 60;
+        if (!qqRevokeMsgRateList.containsKey(qq)) {
+            List<Long> msgList = new ArrayList<>(1);
+            msgList.add(System.currentTimeMillis());
+            qqRevokeMsgRateList.put(qq, msgList);
+        }
+        List<Long> limit = qqRevokeMsgRateList.get(qq);
+        if (limit.size() <= length) {
+            // 同一qq的消息在队列中未出现，可以直接返回消息
+            limit.add(System.currentTimeMillis());
+        } else {
+            if (getSecondDiff(limit.get(0), second)) {
+                //同一队列长度超过1，但是距离首条消息已经大于60秒
+                limit.remove(0);
+                // remove操作后元素前移,如果依然超过1条就把多出的时间戳删掉
+                while (limit.size() > 1) {
+                    limit.remove(1);
+                }
+                limit.add(System.currentTimeMillis());
+            } else {
+                    // 消息间距不到1分钟，不记录
+                    log.warn("{}连续请求,已忽视撤回消息", name);
+                flag = false;
+            }
+        }
+        //对队列进行垃圾回收
+        qqMsgRateList.clear();
+
+        return flag;
+    }
+
     public boolean getSecondDiff(Long timestamp, int second) {
         return (System.currentTimeMillis() - timestamp) / 1000 > second;
     }
@@ -380,13 +423,17 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 //撤回消息事件
                 result = "";
                 eventData = new JSONObject(message.getEventData());
-                int anInt = getInt(6);
-                String autoMessage = randomMessageUtil.randomReply(anInt);
-                if (anInt == Constance.randomRevokeMaxNum) {
-                    sendMsgUtil.CallOPQApiSendImg(groupId, "", SendMsgUtil.picBase64Buf, autoMessage, 2);
-                } else {
-                    groupsChatService.sendMessage(groupId, eventData.getLong("UserID"),
-                            autoMessage);
+                // 设置撤回消息的回复频率
+                if(getMsgLimitForRevoke(qq, groupId, name)) {
+                    // 随机数0-6 随机回复消息内容
+                    int anInt = getInt(6);
+                    String autoMessage = randomMessageUtil.randomReply(anInt);
+                    if (anInt == Constance.randomRevokeMaxNum) {
+                        sendMsgUtil.CallOPQApiSendImg(groupId, "", SendMsgUtil.picBase64Buf, autoMessage, 2);
+                    } else {
+                        groupsChatService.sendMessage(groupId, eventData.getLong("UserID"),
+                                autoMessage);
+                    }
                 }
                 break;
             default:
