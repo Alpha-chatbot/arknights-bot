@@ -18,6 +18,6 @@ public class SpecialConstanceUtil {
         Map<String, ClassificationEnum> map = new HashMap<>();
         map.put("撅你", FK);
 
-        return map.getOrDefault(s, TALKING);
+        return map.getOrDefault(s, null);
     }
 }
