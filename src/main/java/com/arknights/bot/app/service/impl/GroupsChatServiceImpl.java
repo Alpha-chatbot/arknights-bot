@@ -94,11 +94,17 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             }
             // 菜单格式消息内容标准:#开头
             ClassificationEnum c = SpecialConstanceUtil.GetClass(text);
+            log.info("特殊类型消息:{}", c);
             if (text.startsWith(Constance.START_MARK) || !Objects.isNull(c)) {
+                String messages = null;
                 //判断回复效率，以防和其他机器人互动死锁
                 if (getMsgLimit(currentAccount, groupId, name)) {
-                    // 取 #后的内容
-                    String messages = text.substring(1);
+                    if(Objects.isNull(c)) {
+                        // 取 #后的内容
+                        messages = text.substring(1);
+                    } else {
+                        messages = text;
+                    }
                     log.info("message内容{}", messages);
                     // 调用菜单关键词匹配方法
                     return queryKeyword(currentAccount, groupId, name, messages);
@@ -149,6 +155,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         if (text.contains(Constance.FK)) {
             c = FK;
         }
+        log.info("当前c:{}", c);
         switch (c) {
             case CaiDan:
                 result = "这里是W测试版初号机1.1\n" +
@@ -485,6 +492,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
     }
 
     public void autoEventWithSendPic(Long groupId, Long qq, String path) {
+        log.info("调用已有图片返回");
         try {
             // resource获取图片,并InputStream转为BufferedImage,再转为url调用OPQ的api
             ClassPathResource resource = new ClassPathResource(path);
