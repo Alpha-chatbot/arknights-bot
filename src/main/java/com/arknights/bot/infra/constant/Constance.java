@@ -37,6 +37,8 @@ public interface Constance {
 
     String SKILL_QUERY = "技能 ";
 
+    String FK = "撅你";
+
     String SKILL_SPECIAL_F = "RankⅠ";
     String SKILL_SPECIAL_S = "RankⅡ";
     String SKILL_SPECIAL_T = "RankⅢ";

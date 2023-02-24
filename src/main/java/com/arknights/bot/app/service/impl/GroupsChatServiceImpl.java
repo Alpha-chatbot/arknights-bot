@@ -109,7 +109,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             // 艾特行为
             if (text.contains(Constance.AT_LOGO)) {
                 // 自动回复表情包
-                autoEventForAt(groupId, currentAccount);
+                autoEventWithSendPic(groupId, currentAccount, "pic/atPic.jpg");
             }
         }
         return null;
@@ -146,6 +146,10 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         if (text.startsWith(Constance.TOKEN_INSERT)) {
             c = TokenInsert;
             text = text.substring(Constance.TOKEN_INSERT.length());
+        }
+        // 撅你.gif
+        if(text.contains(Constance.FK)){
+            c = FK;
         }
         switch (c) {
             case CaiDan:
@@ -216,6 +220,9 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                     attachContent = Constance.SKILL_QUERY;
                     resultType = Constance.TYPE_JUST_IMG;
                 }
+                break;
+            case FK:
+                autoEventWithSendPic(groupId, qq, "pic/jue.gif");
                 break;
             default:
                 if (StringUtils.isBlank(result)) {
@@ -478,10 +485,10 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         return token;
     }
 
-    public void autoEventForAt(Long groupId, Long qq) {
+    public void autoEventWithSendPic(Long groupId, Long qq, String path) {
         try {
             // resource获取图片,并InputStream转为BufferedImage,再转为url调用OPQ的api
-            ClassPathResource resource = new ClassPathResource("pic/atPic.jpg");
+            ClassPathResource resource = new ClassPathResource(path);
             InputStream inputStream = resource.getInputStream();
             BufferedImage image = ImageIO.read(inputStream);
             String base641 = replaceEnter(new BASE64Encoder().encode(TextToImageUtil.imageToBytes(image)));

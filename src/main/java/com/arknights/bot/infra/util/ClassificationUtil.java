@@ -34,6 +34,7 @@ public class ClassificationUtil {
         map.put("功能", CaiDan);
         map.put("技能查询", SkillQuery);
         map.put("发红包", RED_ENVELOPE);
+        map.put("撅你", FK);
 
         return map.getOrDefault(s, TALKING);
     }

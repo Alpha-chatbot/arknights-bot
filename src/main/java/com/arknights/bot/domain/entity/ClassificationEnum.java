@@ -14,5 +14,6 @@ public enum ClassificationEnum {
     CaiDan,
     SkillQuery,
     RED_ENVELOPE,
+    FK,
     TALKING;
 }
