@@ -67,7 +67,7 @@ public class TextToImageUtil {
             }
         }
         g.dispose();
-        String s = replaceEnter(new BASE64Encoder().encode(imageToBytes(image)));
+        String s = replaceEnter(new BASE64Encoder().encode(imageToBytes(image, "png")));
         image = null;
         return s;
     }
@@ -75,10 +75,10 @@ public class TextToImageUtil {
     /**
      * BufferedImage转byte[]
      */
-    public static byte[] imageToBytes(BufferedImage bImage) {
+    public static byte[] imageToBytes(BufferedImage bImage, String formatName) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
-            ImageIO.write(bImage, "png", out);
+            ImageIO.write(bImage, formatName, out);
         } catch (IOException ignored) {
         }
         return out.toByteArray();

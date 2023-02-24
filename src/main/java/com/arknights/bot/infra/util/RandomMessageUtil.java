@@ -102,7 +102,7 @@ public class RandomMessageUtil {
                     ClassPathResource resource = new ClassPathResource("pic/revoke.jpg");
                     InputStream inputStream = resource.getInputStream();
                     BufferedImage image = ImageIO.read(inputStream);
-                    message = replaceEnter(new BASE64Encoder().encode(TextToImageUtil.imageToBytes(image)));
+                    message = replaceEnter(new BASE64Encoder().encode(TextToImageUtil.imageToBytes(image, "png")));
                 }catch (Exception e){
                     e.printStackTrace();
                 }

@@ -493,12 +493,16 @@ public class GroupsChatServiceImpl implements GroupsChatService {
 
     public void autoEventWithSendPic(Long groupId, Long qq, String path) {
         log.info("调用已有图片返回");
+        String formatType = "png";
+        if(path.contains("gif")){
+            formatType = "gif";
+        }
         try {
             // resource获取图片,并InputStream转为BufferedImage,再转为url调用OPQ的api
             ClassPathResource resource = new ClassPathResource(path);
             InputStream inputStream = resource.getInputStream();
             BufferedImage image = ImageIO.read(inputStream);
-            String base641 = replaceEnter(new BASE64Encoder().encode(TextToImageUtil.imageToBytes(image)));
+            String base641 = replaceEnter(new BASE64Encoder().encode(TextToImageUtil.imageToBytes(image, formatType)));
             sendMsgUtil.CallOPQApiSendImg(groupId, "", SendMsgUtil.picBase64Buf, base641, 2);
         } catch (Exception e) {
             e.printStackTrace();
@@ -564,7 +568,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
      */
     public String CallOPQApiSendImgMsg(List<GaChaInfo> gaChaInfoList) {
         BufferedImage pic = drawPicByGaChaList(gaChaInfoList);
-        String s = replaceEnter(new BASE64Encoder().encode(TextToImageUtil.imageToBytes(pic)));
+        String s = replaceEnter(new BASE64Encoder().encode(TextToImageUtil.imageToBytes(pic, "png")));
         pic = null;
         return s;
     }
@@ -752,7 +756,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         if (Objects.isNull(image)) {
             return null;
         }
-        return replaceEnter(new BASE64Encoder().encode(TextToImageUtil.imageToBytes(image)));
+        return replaceEnter(new BASE64Encoder().encode(TextToImageUtil.imageToBytes(image, "png")));
     }
 
 
