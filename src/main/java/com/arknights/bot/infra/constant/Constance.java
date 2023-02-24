@@ -63,4 +63,5 @@ public interface Constance {
     String OPERATOR_END_LOCAL = "取自";
 
     String ZERO = "0";
+    int randomRevokeMaxNum = 6;
 }

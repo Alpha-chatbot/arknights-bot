@@ -9,6 +9,7 @@ import com.arknights.bot.infra.mapper.GaChaInfoMapper;
 import com.arknights.bot.infra.mapper.GroupChatMapper;
 import com.arknights.bot.infra.mapper.SkillInfoMapper;
 import com.arknights.bot.infra.util.ClassificationUtil;
+import com.arknights.bot.infra.util.RandomMessageUtil;
 import com.arknights.bot.infra.util.SendMsgUtil;
 import com.arknights.bot.infra.util.TextToImageUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -27,12 +28,14 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
+import java.math.MathContext;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.arknights.bot.domain.entity.ClassificationEnum.*;
 import static com.arknights.bot.infra.util.DesUtil.*;
+import static com.arknights.bot.infra.util.RandomMessageUtil.*;
 import static com.arknights.bot.infra.util.TextToImageUtil.replaceEnter;
 
 
@@ -60,6 +63,8 @@ public class GroupsChatServiceImpl implements GroupsChatService {
 
     @Autowired
     private SendMsgUtil sendMsgUtil;
+    @Autowired
+    private RandomMessageUtil randomMessageUtil;
 
     private final Map<Long, List<Long>> qqMsgRateList = new HashMap<>();
     private static final String AK_URL = "https://ak.hypergryph.com";
@@ -172,7 +177,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 }
                 // 对tokenJson解析
                 String content = jsonHandler(text);
-                if(StringUtils.isEmpty(content)){
+                if (StringUtils.isEmpty(content)) {
                     result = "token格式异常";
                 } else {
                     // token进行加密
@@ -375,8 +380,14 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 //撤回消息事件
                 result = "";
                 eventData = new JSONObject(message.getEventData());
-                groupsChatService.sendMessage(groupId, eventData.getLong("UserID"),
-                        "刚刚有人说请客,但是撤回了");
+                int anInt = getInt(6);
+                String autoMessage = randomMessageUtil.randomReply(anInt);
+                if (anInt == Constance.randomRevokeMaxNum) {
+                    sendMsgUtil.CallOPQApiSendImg(groupId, "", SendMsgUtil.picBase64Buf, autoMessage, 2);
+                } else {
+                    groupsChatService.sendMessage(groupId, eventData.getLong("UserID"),
+                            autoMessage);
+                }
                 break;
             default:
                 result = "其他事件";
@@ -522,7 +533,8 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         // 当前卡池寻访数
         int poolGaChaCounts = 0;
         // 当次官网查询记录所获寻访次数(十连按10次算)
-        int counts = value.size();;
+        int counts = value.size();
+        ;
 
         // 对最近一次官网的寻访记录数据进行分组
         Map<Integer, List<GaChaInfo>> gaChaGroup = value.stream().collect(Collectors.groupingBy(GaChaInfo::getRarity));
@@ -577,7 +589,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         //     * xx池   xx发 六星数量，五星数量
         // 铁青色
         g.setColor(new Color(70, 130, 180));
-        g.drawString(part1 + "共计" + counts +"抽", 0, 155);
+        g.drawString(part1 + "共计" + counts + "抽", 0, 155);
         length = 4;
         g.setColor(Color.BLACK);
         for (Map.Entry<String, List<GaChaInfo>> item : gaChaInfoPoolsMap.entrySet()) {
@@ -959,15 +971,15 @@ public class GroupsChatServiceImpl implements GroupsChatService {
         return image;
     }
 
-    String jsonHandler(String tokenJson){
+    String jsonHandler(String tokenJson) {
         com.alibaba.fastjson.JSONObject parse = (com.alibaba.fastjson.JSONObject) com.alibaba.fastjson.JSONObject.parse(tokenJson);
         String code = parse.getString("code");
-        if(!Constance.ZERO.equals(code)){
+        if (!Constance.ZERO.equals(code)) {
             return null;
         }
         com.alibaba.fastjson.JSONObject data = parse.getJSONObject("data");
         String tokenContent = data.getString("content");
-        if(StringUtils.isEmpty(tokenContent)){
+        if (StringUtils.isEmpty(tokenContent)) {
             return null;
         }
         log.info("tokenJson解析完成");
