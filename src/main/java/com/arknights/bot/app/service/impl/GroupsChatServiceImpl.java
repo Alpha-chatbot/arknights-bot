@@ -8,10 +8,7 @@ import com.arknights.bot.infra.constant.Constance;
 import com.arknights.bot.infra.mapper.GaChaInfoMapper;
 import com.arknights.bot.infra.mapper.GroupChatMapper;
 import com.arknights.bot.infra.mapper.SkillInfoMapper;
-import com.arknights.bot.infra.util.ClassificationUtil;
-import com.arknights.bot.infra.util.RandomMessageUtil;
-import com.arknights.bot.infra.util.SendMsgUtil;
-import com.arknights.bot.infra.util.TextToImageUtil;
+import com.arknights.bot.infra.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
@@ -96,7 +93,8 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 e.printStackTrace();
             }
             // 菜单格式消息内容标准:#开头
-            if (text.startsWith(Constance.START_MARK)) {
+            ClassificationEnum c = SpecialConstanceUtil.GetClass(text);
+            if (text.startsWith(Constance.START_MARK) || !Objects.isNull(c)) {
                 //判断回复效率，以防和其他机器人互动死锁
                 if (getMsgLimit(currentAccount, groupId, name)) {
                     // 取 #后的内容
@@ -148,7 +146,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             text = text.substring(Constance.TOKEN_INSERT.length());
         }
         // 撅你.gif
-        if(text.contains(Constance.FK)){
+        if (text.contains(Constance.FK)) {
             c = FK;
         }
         switch (c) {
@@ -320,6 +318,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
 
     /**
      * 对于有些喜欢撤回的群友限定一分钟内只记录一次
+     *
      * @param qq
      * @param groupId
      * @param name
@@ -336,26 +335,20 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             qqRevokeMsgRateList.put(qq, msgList);
         }
         List<Long> limit = qqRevokeMsgRateList.get(qq);
-        if (limit.size() <= length) {
+        if (limit.isEmpty()) {
             // 同一qq的消息在队列中未出现，可以直接返回消息
             limit.add(System.currentTimeMillis());
         } else {
-            if (getSecondDiff(limit.get(0), second)) {
-                //同一队列长度超过1，但是距离首条消息已经大于60秒
-                limit.remove(0);
-                // remove操作后元素前移,如果依然超过1条就把多出的时间戳删掉
-                while (limit.size() > 1) {
-                    limit.remove(1);
-                }
-                limit.add(System.currentTimeMillis());
-            } else {
-                    // 消息间距不到1分钟，不记录
-                    log.warn("{}连续请求,已忽视撤回消息", name);
+            if (!getSecondDiff(limit.get(0), second)) {
+                // 消息间距不到1分钟，不记录
+                log.warn("{}连续请求,已忽视撤回消息", name);
                 flag = false;
+            } else {
+                limit.clear();
+                limit.add(System.currentTimeMillis());
             }
         }
-        //对队列进行垃圾回收
-        qqMsgRateList.clear();
+        gcMsgLimitRate();
 
         return flag;
     }
@@ -371,6 +364,12 @@ public class GroupsChatServiceImpl implements GroupsChatService {
             //回收所有超过30秒的会话
             qqMsgRateList.entrySet().removeIf(entry -> getSecondDiff(entry.getValue().get(0), 30));
             log.info("消息速率队列回收结束，当前map长度为：{}", qqMsgRateList.size());
+        }
+        if (qqRevokeMsgRateList.size() > 256) {
+            log.warn("开始对撤回消息速率队列进行回收，当前map长度为：{}", qqRevokeMsgRateList.size());
+            //回收所有超过60秒的会话
+            qqRevokeMsgRateList.entrySet().removeIf(entry -> getSecondDiff(entry.getValue().get(0), 60));
+            log.info("撤回消息速率队列回收结束，当前map长度为：{}", qqRevokeMsgRateList.size());
         }
     }
 
@@ -431,7 +430,7 @@ public class GroupsChatServiceImpl implements GroupsChatService {
                 result = "";
                 eventData = new JSONObject(message.getEventData());
                 // 设置撤回消息的回复频率
-                if(getMsgLimitForRevoke(qq, groupId, name)) {
+                if (getMsgLimitForRevoke(qq, groupId, name)) {
                     // 随机数0-6 随机回复消息内容
                     int anInt = getInt(6);
                     String autoMessage = randomMessageUtil.randomReply(anInt);
