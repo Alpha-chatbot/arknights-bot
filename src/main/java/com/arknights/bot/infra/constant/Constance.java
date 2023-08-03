@@ -66,4 +66,9 @@ public interface Constance {
 
     String ZERO = "0";
     int randomRevokeMaxNum = 6;
+
+    /**
+     * 临时代码
+     */
+    String KITTY_NAME = "chocolate";
 }
