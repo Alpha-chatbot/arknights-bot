@@ -71,4 +71,9 @@ public interface Constance {
      * 临时代码
      */
     String KITTY_NAME = "chocolate";
+
+    /**
+     * 测试分支
+     */
+    String TEST_BRANCH_NAME = "na-0803";
 }
